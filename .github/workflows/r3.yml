@@ -1,0 +1,75 @@
+name: Render r3 Shorts
+# Setavaz round-3 Shorts (r3/): one lit 3D world per track, rendered SILENT on GitHub's runners (this repo is public,
+# so the minutes are free). The Setavaz panel's «ساخت ویدیو» dispatches `what = r3` for one track with the input `job`
+# (gzip, then base64; made by the app's lib/r3job.ts): the track's name, tempo and world, and the window's sound as
+# numbers only (onsets and loudness per frame), measured on the app's own server. The music never enters this repo or
+# this run: the app reads the artifact (the silent picture, its cover frame, its report), puts the track under it on
+# its server and checks the loudness there. The panel finds its run by this title, so the title names the track.
+# A pull request renders only the cheap look (turntables and key frames, from the test jobs r3/jobs/*.json).
+# Nothing is posted or scheduled. Artifacts are kept 3 days.
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('Render {0} {1}', inputs.what, inputs.tracks) || github.event.pull_request.title }}
+on:
+  pull_request:
+    paths: ['r3/**', '.github/workflows/r3.yml']
+  workflow_dispatch:
+    inputs:
+      what: { description: 'r3 (one full Short from the job) or r3-stills (turntables and key frames of the test jobs)', required: true, default: 'r3-stills' }
+      tracks: { description: 'r3: the track, as a JSON list of one (names the run)', required: false, default: '[]' }
+      job: { description: 'r3: the job from the Setavaz app (gzip, then base64). Numbers only, no sound.', required: false, default: '' }
+permissions:
+  contents: read
+concurrency:
+  group: r3-${{ github.ref }}-${{ inputs.what || 'pr' }}-${{ inputs.tracks || '' }}
+  cancel-in-progress: true
+jobs:
+  stills:
+    if: github.event_name == 'pull_request' || inputs.what == 'r3-stills'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults: { run: { working-directory: r3 } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null && ffmpeg -version | head -1 && google-chrome --version
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - name: Turntable of every library object
+        run: node render.mjs --turntables --out out
+      - name: Key frames of each Short
+        run: |
+          for f in jobs/*.json; do
+            node render.mjs --job "$f" --stills --out out
+          done
+      - name: Keep the files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: r3-stills, path: r3/out/, retention-days: 3 }
+  r3:
+    if: github.event_name == 'workflow_dispatch' && inputs.what == 'r3'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    defaults: { run: { working-directory: r3 } }
+    steps:
+      - uses: actions/checkout@v4
+      - name: The job
+        id: job
+        # read from the event file, not from an env var, so the long input is never printed in the log
+        run: |
+          jq -r '.inputs.job // ""' "$GITHUB_EVENT_PATH" > job.b64
+          test -s job.b64 || { echo "no job: the Setavaz panel sends one with each dispatch"; exit 1; }
+          TRACK=$(base64 -d job.b64 | gunzip | jq -r '.trackId')
+          echo "$TRACK" | grep -Eq '^[a-z0-9-]{1,60}$' || { echo "the job names no track"; exit 1; }
+          jq -r '.inputs.tracks // ""' "$GITHUB_EVENT_PATH" | grep -Fq "\"$TRACK\"" || { echo "the job is for $TRACK, the title names another track"; exit 1; }
+          echo "track=$TRACK" >> "$GITHUB_OUTPUT"
+          echo "job for $TRACK: $(wc -c < job.b64) characters"
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null && ffmpeg -version | head -1 && google-chrome --version
+      - run: npm ci --no-audit --no-fund
+      - name: Render (silent picture) and gate
+        run: node render.mjs --job job.b64 --out out
+      - name: Keep the files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: 'r3-${{ steps.job.outputs.track }}', path: r3/out/, retention-days: 3 }

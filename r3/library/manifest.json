@@ -1,0 +1,662 @@
+{
+  "about": "Setavaz's code-made models, sets, textures and effects as the Ahura library knows them (ahura-hub docs/library.md, the same shape as Pickwise's packages/motion/src/v2/set/library.json). One row per thing: its id in the library, the file and the function that makes it, its names, what it shows, how it was made and under which licence. Every file stands alone: it needs three.js and the small helpers in util/ only. A new make* function needs its row here (r3/gate.test.mjs holds the two together). Before writing a new object, ask the library whether another project already has it. No sound is made here: a Short's only sound is the track itself.",
+  "project": "setavaz",
+  "repo": "alitalebpour99-collab/setavaz-render",
+  "root": "r3/library",
+  "style": "lit-3d",
+  "asked": "Asked on 16 Nov 2026 before making these (ahura-hub lib/library/entries): no fire bowl, charcoal, weathervane, turret roof, crucible, mould, flame, lightning, storm cloud or rain entry existed in any project, so all are new.",
+  "entries": [
+    {
+      "id": "setavaz-fire-bowl",
+      "kind": "model",
+      "file": "models/fire-bowl.mjs",
+      "symbol": "makeFireBowl",
+      "names": {
+        "en": "Cast-iron fire bowl with ring handles",
+        "fa": "آتشدان چدنی با دو حلقه"
+      },
+      "depicts": "A wide, shallow iron bowl on a round foot, one metre across, with a rolled rim and two hanging ring handles",
+      "tags": [
+        "fire",
+        "bowl",
+        "brazier",
+        "iron",
+        "hearth",
+        "night"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeFireBowl(): one lathed section for foot, waist, bowl and rim; torus handles; grain as bump and roughness"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz",
+      "facts": {
+        "metres": [
+          1.19,
+          0.36,
+          1.01
+        ]
+      }
+    },
+    {
+      "id": "setavaz-charcoal",
+      "kind": "model",
+      "file": "models/fire-bowl.mjs",
+      "symbol": "makeCoal",
+      "names": {
+        "en": "Glowing lump of charcoal",
+        "fa": "تکه زغال گداخته"
+      },
+      "depicts": "One broken lump of charcoal whose glowing veins can be turned from black to burning",
+      "tags": [
+        "charcoal",
+        "coal",
+        "ember",
+        "fire",
+        "glow"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeCoal(seed, size): an icosphere pushed by noise into a split lump; its heat is an emissive map; userData.heat(k)"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-ash-bed",
+      "kind": "model",
+      "file": "models/fire-bowl.mjs",
+      "symbol": "makeAshBed",
+      "names": {
+        "en": "Bed of ash",
+        "fa": "بستر خاکستر"
+      },
+      "depicts": "The grey ash that lies in the fire bowl under the coals",
+      "tags": [
+        "ash",
+        "fire",
+        "hearth"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeAshBed(): a lathed low dome, roughened by noise"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-hearth",
+      "kind": "set",
+      "file": "models/fire-bowl.mjs",
+      "symbol": "makeHearth",
+      "names": {
+        "en": "Hearth: fire bowl with ash and a pile of coals",
+        "fa": "آتشدان با خاکستر و زغال"
+      },
+      "depicts": "The fire bowl as it stands in «Last Ember»: ash, thirty lumps of charcoal and one hero ember on top",
+      "tags": [
+        "fire",
+        "hearth",
+        "ember",
+        "coals",
+        "night"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeHearth(): the bowl, the ash bed and makeCoalPile() together"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-weathervane",
+      "kind": "model",
+      "file": "models/weathervane.mjs",
+      "symbol": "makeWeathervane",
+      "names": {
+        "en": "Copper weathervane with an arrow and a four-point star",
+        "fa": "بادنمای مسی با پیکان و ستارهٔ چهارپر"
+      },
+      "depicts": "A copper weathervane about 2.1 m tall: mast, two globes, four cardinal arms, a turning arrow with a swallow-tail, the label's star and a spike",
+      "tags": [
+        "weathervane",
+        "copper",
+        "roof",
+        "wind",
+        "storm",
+        "star"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeWeathervane(): cylinders, spheres and bevelled extruded plates in one copper material; the head turns about the mast"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz",
+      "facts": {
+        "metres": [
+          1.42,
+          2.12,
+          0.95
+        ]
+      }
+    },
+    {
+      "id": "setavaz-turret-roof",
+      "kind": "model",
+      "file": "models/turret-roof.mjs",
+      "symbol": "makeTurretRoof",
+      "names": {
+        "en": "Turret roof in green copper",
+        "fa": "بام برجک با مس زنگارگرفته"
+      },
+      "depicts": "The top of a twelve-sided bell-curved turret roof clad in copper gone green, with rolled seams on its ridges",
+      "tags": [
+        "roof",
+        "turret",
+        "copper",
+        "verdigris",
+        "storm"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeTurretRoof(): a twelve-sided lathe with flat faces, tube seams along the ridges, the verdigris texture"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-crucible-pot",
+      "kind": "model",
+      "file": "models/crucible.mjs",
+      "symbol": "makeCruciblePot",
+      "names": {
+        "en": "Foundry crucible, glowing",
+        "fa": "بوتهٔ ریخته‌گری گداخته"
+      },
+      "depicts": "A graphite crucible with a pouring lip, hot at the rim and inside, full of molten metal",
+      "tags": [
+        "crucible",
+        "foundry",
+        "molten",
+        "metal",
+        "glow"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeCruciblePot(): a lathed thick-walled pot with the lip pinched into the rim; the wall's heat is an emissive map"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-crucible",
+      "kind": "model",
+      "file": "models/crucible.mjs",
+      "symbol": "makeCrucible",
+      "names": {
+        "en": "Crucible in a tilting stand",
+        "fa": "بوته روی پایهٔ گردان"
+      },
+      "depicts": "The crucible held by a steel band on two trunnions between two uprights, with a lever to tip it",
+      "tags": [
+        "crucible",
+        "foundry",
+        "stand",
+        "steel",
+        "pour"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeCrucible(): the pot, a torus band, pins, box uprights and a lever; setTilt(angle), lipWorld()"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-ring-mould",
+      "kind": "model",
+      "file": "models/ring-mould.mjs",
+      "symbol": "makeRingMould",
+      "names": {
+        "en": "Round sand mould with a ring channel",
+        "fa": "قالب ماسه‌ای گرد با شیار حلقه"
+      },
+      "depicts": "A round steel foundry flask packed with dark sand; a ring-shaped channel and a pouring basin are pressed into it",
+      "tags": [
+        "mould",
+        "foundry",
+        "sand",
+        "ring",
+        "casting"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeRingMould(): a lathed steel band and a lathed sand bed with a half-round groove; the basin is pressed in by moving points"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz",
+      "facts": {
+        "metres": [
+          1.2,
+          0.16,
+          1.26
+        ]
+      }
+    },
+    {
+      "id": "setavaz-molten-ring",
+      "kind": "model",
+      "file": "models/ring-mould.mjs",
+      "symbol": "makeMoltenRing",
+      "names": {
+        "en": "Molten metal filling a ring",
+        "fa": "فلز مذاب در حلقه"
+      },
+      "depicts": "The metal in the mould's channel: it fills both ways round from the basin, glows, and cools from white-yellow to dark red",
+      "tags": [
+        "molten",
+        "metal",
+        "ring",
+        "glow",
+        "loop"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeMoltenRing(): two strips of a lens-shaped section drawn up to the fill; metalColour(heat) is its colour"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-flame",
+      "kind": "model",
+      "file": "effects/flame.mjs",
+      "symbol": "makeFlame",
+      "names": {
+        "en": "Flame (shader sheet)",
+        "fa": "شعله"
+      },
+      "depicts": "A flame that licks upward: a teardrop eaten by rising noise, white at the core, orange, red at the edge",
+      "tags": [
+        "flame",
+        "fire",
+        "effect"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeFlame(): a camera-facing plane with a small GLSL shader; set(time, power, gain)"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-sparks",
+      "kind": "model",
+      "file": "effects/sparks.mjs",
+      "symbol": "makeSparks",
+      "names": {
+        "en": "Sparks",
+        "fa": "جرقه‌ها"
+      },
+      "depicts": "Sparks that fly up or out, slow in the air, cool from white-yellow to red and die",
+      "tags": [
+        "sparks",
+        "fire",
+        "effect",
+        "particles"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeSparks(bursts): glowing points on closed-form paths, so any frame can be drawn alone"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-lightning",
+      "kind": "model",
+      "file": "effects/lightning.mjs",
+      "symbol": "makeBolt",
+      "names": {
+        "en": "Lightning bolt",
+        "fa": "آذرخش"
+      },
+      "depicts": "A jagged lightning channel with thinner branches, from a point in the cloud to where it lands",
+      "tags": [
+        "lightning",
+        "storm",
+        "effect"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeBolt({ from, to, seed }): midpoint displacement drawn as fat lines; strikeEnvelope() is its flicker"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-storm-clouds",
+      "kind": "set",
+      "file": "sets/storm-sky.mjs",
+      "symbol": "makeCloudDeck",
+      "names": {
+        "en": "Storm cloud deck",
+        "fa": "ابرهای طوفانی"
+      },
+      "depicts": "Dark storm clouds all round and overhead, which light up from inside when lightning flashes",
+      "tags": [
+        "clouds",
+        "storm",
+        "sky",
+        "night"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeCloudDeck(): about two hundred soft puffs (sprites); light(flashes) colours each by its distance to the flashes"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-rain",
+      "kind": "set",
+      "file": "sets/storm-sky.mjs",
+      "symbol": "makeRain",
+      "names": {
+        "en": "Rain that can hang still",
+        "fa": "بارانی که در هوا می‌ایستد"
+      },
+      "depicts": "Rain in a box of air: streaks while it falls, hanging drops when it is held still",
+      "tags": [
+        "rain",
+        "storm",
+        "weather"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeRain(): line segments and points wrapped in a box; update(fall, speed, light)"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-night-sky",
+      "kind": "set",
+      "file": "sets/night.mjs",
+      "symbol": "makeSkyDome",
+      "names": {
+        "en": "Night sky dome with stars",
+        "fa": "گنبد آسمان شب با ستاره"
+      },
+      "depicts": "A sky painted from the ground colour through the horizon to the zenith, and far stars of three sizes",
+      "tags": [
+        "sky",
+        "night",
+        "stars",
+        "background"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeSkyDome() paints a sphere's points; makeStars() scatters glowing points on the upper dome"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-ground",
+      "kind": "set",
+      "file": "sets/night.mjs",
+      "symbol": "makeGround",
+      "names": {
+        "en": "Ground disc with grain and a contact shadow",
+        "fa": "زمین با بافت ریز و سایهٔ تماس"
+      },
+      "depicts": "A wide stone or concrete ground that takes shadows, and a soft dark patch that seats an object on it",
+      "tags": [
+        "ground",
+        "floor",
+        "stone",
+        "concrete",
+        "shadow"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeGround() and makeContactShadow(): a disc with a grain texture; a radial alpha patch"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-ember",
+      "kind": "texture",
+      "file": "textures/data.mjs",
+      "symbol": "emberTexture",
+      "names": {
+        "en": "Burning-coal heat map",
+        "fa": "بافت گدازش زغال"
+      },
+      "depicts": "Dark crust with glowing veins and hot patches, for an emissive map",
+      "tags": [
+        "ember",
+        "coal",
+        "heat",
+        "emissive"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "emberTexture(seed): tiling fractal noise, ridged for the veins, 256 px, drawn by code"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-verdigris",
+      "kind": "texture",
+      "file": "textures/data.mjs",
+      "symbol": "verdigrisTexture",
+      "names": {
+        "en": "Verdigris copper",
+        "fa": "مس زنگارگرفته"
+      },
+      "depicts": "Green weathered copper with brown-copper streaks running down",
+      "tags": [
+        "copper",
+        "verdigris",
+        "patina",
+        "roof"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "verdigrisTexture(seed): stretched noise streaks over blotches, 256 px, drawn by code"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-copper-rough",
+      "kind": "texture",
+      "file": "textures/data.mjs",
+      "symbol": "copperRoughTexture",
+      "names": {
+        "en": "Weathered copper roughness",
+        "fa": "زبری مس هوازده"
+      },
+      "depicts": "Smooth and dull blotches for copper that has lived outdoors (a roughness map)",
+      "tags": [
+        "copper",
+        "roughness",
+        "metal"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "copperRoughTexture(seed): tiling noise in the green channel, 256 px"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-grain",
+      "kind": "texture",
+      "file": "textures/data.mjs",
+      "symbol": "grainTexture",
+      "names": {
+        "en": "Fine grain",
+        "fa": "بافت ریزدانه"
+      },
+      "depicts": "Fine grey grain for cast iron, sand, stone and concrete (bump and roughness)",
+      "tags": [
+        "grain",
+        "bump",
+        "iron",
+        "sand",
+        "stone"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "grainTexture(seed): two octaves of tiling noise, 256 px"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-puff",
+      "kind": "texture",
+      "file": "textures/data.mjs",
+      "symbol": "puffTexture",
+      "names": {
+        "en": "Cloud puff",
+        "fa": "تکه ابر"
+      },
+      "depicts": "A soft blob whose edge is eaten by noise, for clouds and smoke",
+      "tags": [
+        "cloud",
+        "puff",
+        "smoke",
+        "sprite"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "puffTexture(seed): a radial falloff minus noise, 128 px"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-glow",
+      "kind": "texture",
+      "file": "textures/data.mjs",
+      "symbol": "glowTexture",
+      "names": {
+        "en": "Soft round glow",
+        "fa": "هالهٔ نرم"
+      },
+      "depicts": "A round glow like a light out of focus: sparks, drops, far lights",
+      "tags": [
+        "glow",
+        "bokeh",
+        "spark",
+        "sprite"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "glowTexture(): a radial falloff, 64 px"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-crucible-heat",
+      "kind": "texture",
+      "file": "textures/data.mjs",
+      "symbol": "crucibleHeatTexture",
+      "names": {
+        "en": "Crucible wall heat",
+        "fa": "گرمای دیوارهٔ بوته"
+      },
+      "depicts": "How hot a crucible's wall is from the foot to the rim and down inside (an emissive map)",
+      "tags": [
+        "crucible",
+        "heat",
+        "emissive"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "crucibleHeatTexture(): a gradient along the lathe's section, 64 px"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    }
+  ]
+}
