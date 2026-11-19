@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Setareh Code: long-form proof</title>
+<style>
+  @font-face { font-family: 'Garamond'; src: url('shared/assets/EBGaramond-Variable.ttf'); font-weight: 400 800; }
+  @font-face { font-family: 'InterD'; src: url('shared/assets/InterDisplay-SemiBold.ttf'); font-weight: 600; }
+  html, body { margin: 0; background: #120E3F; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #120E3F; }
+  #stage > * { position: absolute; }
+  canvas { left: 0; top: 0; }
+  .plate { display: none; }
+  #mark { right: 70px; top: 56px; width: 120px; opacity: 0.75; }
+  .chap { left: 84px; top: 70px; color: #F6ECD3; font-family: 'InterD'; font-size: 26px; letter-spacing: 0.32em; text-transform: uppercase; opacity: 0; }
+  .chap b { color: #F4C35A; font-weight: 600; margin-right: 18px; }
+  #title { left: 84px; bottom: 96px; color: #F6ECD3; font-family: 'Garamond'; font-weight: 500; font-size: 84px; letter-spacing: 0.05em; }
+  #title span { display: inline-block; }
+  #sub { left: 88px; bottom: 64px; color: #F4C35A; font-family: 'InterD'; font-size: 24px; letter-spacing: 0.3em; }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="longform" data-start="0" data-duration="48" data-width="1920" data-height="1080" data-fps="30">
+  <canvas id="cv" class="clip" width="1920" height="1080" data-start="0" data-duration="48" data-track-index="0"></canvas>
+  <img id="plate" class="plate" src="shared/assets/plate-169.jpg" alt="">
+  <img id="mark" class="clip" src="shared/assets/mark.svg" alt="Setavaz" data-start="0" data-duration="48" data-track-index="1">
+  <div id="c1" class="chap clip" data-start="0" data-duration="48" data-track-index="2"><b>05</b>Breakdown</div>
+  <div id="c2" class="chap clip" data-start="0" data-duration="48" data-track-index="3"><b>06</b>Build</div>
+  <div id="c3" class="chap clip" data-start="0" data-duration="48" data-track-index="4"><b>07</b>The peak</div>
+  <div id="title" class="clip" data-start="0" data-duration="48" data-track-index="5"></div>
+  <div id="sub" class="clip" data-start="0" data-duration="48" data-track-index="6">SETAVAZ</div>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="data.js"></script>
+  <script src="shared/scene.js"></script>
+  <script>
+    // Window 1:24-2:12 of the track: breakdown (0-24 s), second build (24-32 s), second drop (32-48 s).
+    const BUILD = 24, DROP = 32, DUR = 48
+    document.getElementById('title').innerHTML = 'Setareh Code'.split('').map((c) => `<span>${c === ' ' ? '&nbsp;' : c}</span>`).join('')
+    const tl = gsap.timeline({ paused: true })
+    window.svBind(tl, document.getElementById('cv'), document.getElementById('plate'), {
+      duration: DUR, starY: 0.42, starR: 0.33, stars: 520,
+      sections: [{ kind: 'breakdown', start: 0, end: BUILD }, { kind: 'build', start: BUILD, end: DROP }, { kind: 'drop', start: DROP, end: DUR }],
+    })
+    const chap = (id, at) => { tl.fromTo(id, { opacity: 0, x: -20 }, { opacity: 0.85, x: 0, duration: 0.8, ease: 'power2.out' }, at); tl.to(id, { opacity: 0, duration: 0.6 }, at + 3.4) }
+    chap('#c1', 0.6); chap('#c2', BUILD + 0.2); chap('#c3', DROP + 0.3)
+    tl.fromTo('#title span', { opacity: 0, y: 40, filter: 'blur(10px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.6, stagger: 0.05, ease: 'power3.out' }, 2)
+    tl.fromTo('#sub', { opacity: 0 }, { opacity: 0.8, duration: 0.8 }, 2.8)
+    tl.to('#title, #sub', { opacity: 0, duration: 0.8 }, 9)
+    tl.fromTo('#title', { opacity: 0 }, { opacity: 1, duration: 0.01, immediateRender: false }, DROP + 1.2)
+    tl.fromTo('#title span', { opacity: 0, y: 40, filter: 'blur(10px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, stagger: 0.04, ease: 'power3.out', immediateRender: false }, DROP + 1.2)
+    tl.to('#title', { opacity: 0, duration: 0.8 }, DROP + 7)
+    tl.set({}, {}, DUR)
+    window.__timelines = window.__timelines || {}
+    window.__timelines.longform = tl
+  </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+name: Render
+# Renders the Setavaz motion-graphics compositions with HyperFrames on GitHub's runners (this repo is public, so
+# the minutes are free). The pictures are SILENT: the music never enters this repo. The sound is put under the
+# picture on the owner's laptop. Nothing is posted anywhere. Artifacts are kept 3 days.
+on:
+  workflow_dispatch:
+    inputs:
+      which: { description: 'teaser, longform or both', required: true, default: 'both' }
+  push:
+    branches: [main]
+    paths: ['teaser/**', 'longform/**', 'shared/**', '.github/workflows/render.yml']
+permissions:
+  contents: read
+concurrency:
+  group: render
+  cancel-in-progress: true
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        comp: ${{ fromJSON((github.event_name == 'workflow_dispatch' && inputs.which != 'both') && format('["{0}"]', inputs.which) || '["teaser","longform"]') }}
+    env:
+      HF: hyperframes@0.9.17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null && ffmpeg -version | head -1
+      - name: Shared files into the composition
+        run: cp -r shared ${{ matrix.comp }}/shared
+      - name: Lint
+        working-directory: ${{ matrix.comp }}
+        run: npx -y $HF lint . --verbose || true
+      - name: Render (silent picture)
+        working-directory: ${{ matrix.comp }}
+        run: |
+          mkdir -p ../out
+          npx -y $HF render -o ../out/${{ matrix.comp }}.mp4 --fps 30 --quality high --workers 2
+          ffprobe -v error -show_entries stream=codec_name,width,height,nb_frames,r_frame_rate -show_entries format=duration -of compact ../out/${{ matrix.comp }}.mp4
+      - name: Contact sheet (one frame per 2 s)
+        run: ffmpeg -v error -i out/${{ matrix.comp }}.mp4 -vf "fps=0.5,scale=-2:360,tile=6x4" -frames:v 1 out/${{ matrix.comp }}-sheet.jpg
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.comp }}
+          path: out/
+          retention-days: 3
