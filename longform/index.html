@@ -38,7 +38,7 @@
     document.getElementById('title').innerHTML = 'Setareh Code'.split('').map((c) => `<span>${c === ' ' ? '&nbsp;' : c}</span>`).join('')
     const tl = gsap.timeline({ paused: true })
     window.svBind(tl, document.getElementById('cv'), document.getElementById('plate'), {
-      duration: DUR, starY: 0.42, starR: 0.33, stars: 520,
+      duration: DUR, starY: 0.42, starR: 0.33, stars: 520, buildFrom: 0.5,
       sections: [{ kind: 'breakdown', start: 0, end: BUILD }, { kind: 'build', start: BUILD, end: DROP }, { kind: 'drop', start: DROP, end: DUR }],
     })
     const chap = (id, at) => { tl.fromTo(id, { opacity: 0, x: -20 }, { opacity: 0.85, x: 0, duration: 0.8, ease: 'power2.out' }, at); tl.to(id, { opacity: 0, duration: 0.6 }, at + 3.4) }

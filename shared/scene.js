@@ -91,7 +91,7 @@
       // 5. the girih: drawn line by line on the build (or slowly in the breakdown), lit on the drop
       let draw = 0, glow = 0, lw = 1.2, rot = 0, scale = 1
       if (inBreak) { draw = 0.12 + 0.38 * prog(s, t); glow = 0.25 + 0.4 * full; lw = 1 }
-      if (inBuild) { draw = 0.5 + 0.5 * ease(prog(s, t)); glow = 0.35 + 0.4 * prog(s, t); lw = 1.4 }
+      if (inBuild) { const b0 = opts.buildFrom ?? 0.5; draw = b0 + (1 - b0) * ease(prog(s, t)); glow = 0.35 + 0.4 * prog(s, t); lw = 1.4 }
       if (inDrop) { draw = 1; glow = 0.75 + 0.25 * sub; lw = 2 + 3 * sub + 3 * kEnv; rot = dropT * 0.06; scale = 1 + 0.035 * sub + 0.05 * kEnv + 0.12 * Math.exp(-dropT / 0.25) }
       if (s.kind === 'outro') { draw = 1; glow = 0.6 * (1 - prog(s, t)); lw = 1.5; rot = 0.2 }
       if (!inBuild && !inBreak && !inDrop && s.kind !== 'outro') { draw = 0.05; glow = 0.2 }
@@ -121,10 +121,18 @@
         for (let i = kicks.length - 1; i >= 0; i--) {
           const age = t - kicks[i]; if (age < 0) continue; if (age > 1.1) break
           if (kicks[i] < (firstDrop ? firstDrop.start : 0)) continue
+          const life = 1 - age / 1.1
+          // a thin gold shock ring
+          ctx.globalAlpha = 0.55 * life * life; ctx.strokeStyle = GOLD; ctx.lineWidth = 2 + 3 * life
+          ctx.beginPath(); ctx.arc(cx, cy, R * (0.4 + 1.5 * (1 - Math.exp(-age / 0.3))), 0, 6.283); ctx.stroke()
+          // sparks with a soft halo
           for (const d of sparkDirs) {
-            const dist = R * (0.35 + d.v * 1.5 * (1 - Math.exp(-age / 0.35)))
-            ctx.globalAlpha = (1 - age / 1.1) * 0.9
-            ctx.beginPath(); ctx.arc(cx + Math.cos(d.a + i) * dist, cy + Math.sin(d.a + i) * dist, d.s * (1 - age / 1.2), 0, 6.283); ctx.fill()
+            const dist = R * (0.35 + d.v * 1.6 * (1 - Math.exp(-age / 0.35)))
+            const x = cx + Math.cos(d.a + i) * dist, y = cy + Math.sin(d.a + i) * dist, rad = (2.5 + d.s * 2.2) * (0.3 + 0.7 * life)
+            const h = ctx.createRadialGradient(x, y, 0, x, y, rad * 3.2)
+            h.addColorStop(0, 'rgba(255,236,190,0.95)'); h.addColorStop(0.35, 'rgba(244,195,90,0.55)'); h.addColorStop(1, 'rgba(244,195,90,0)')
+            ctx.globalAlpha = life; ctx.fillStyle = h
+            ctx.beginPath(); ctx.arc(x, y, rad * 3.2, 0, 6.283); ctx.fill()
           }
         }
         ctx.restore()

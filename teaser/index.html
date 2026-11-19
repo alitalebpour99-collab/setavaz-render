@@ -48,7 +48,7 @@
     title.innerHTML = 'SETAREH CODE'.split('').map((c) => `<span>${c === ' ' ? '&nbsp;' : c}</span>`).join('')
     const tl = gsap.timeline({ paused: true })
     window.svBind(tl, document.getElementById('cv'), document.getElementById('plate'), {
-      duration: DUR, starY: 0.4, starR: 0.36, stars: 380,
+      duration: DUR, starY: 0.4, starR: 0.36, stars: 380, buildFrom: 0.12,
       sections: [{ name: 'build', kind: 'build', start: 0, end: DROP }, { name: 'drop', kind: 'drop', start: DROP, end: DUR }],
     })
     tl.fromTo('#mark', { opacity: 0.9 }, { opacity: 0, duration: 0.6 }, END - 0.6)
