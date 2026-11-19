@@ -1,0 +1,18 @@
+{
+  "name": "setavaz-r3",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Setavaz round-3 Shorts: one lit 3D world per track, drawn with three.js in a headless Chrome and encoded SILENT with ffmpeg on GitHub's runners. The sound arrives as numbers only (the job); the Setavaz app puts the track under the picture on its own server.",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "test": "node --test *.test.mjs",
+    "r3": "node render.mjs"
+  },
+  "dependencies": {
+    "puppeteer-core": "23.11.1",
+    "three": "0.170.0"
+  }
+}

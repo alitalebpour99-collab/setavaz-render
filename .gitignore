@@ -3,3 +3,6 @@ renders/
 teaser/shared/
 longform/shared/
 node_modules/
+r3/out/
+r3/job.b64
+job-test.b64
