@@ -48,3 +48,28 @@ jobs:
           name: ${{ matrix.comp }}
           path: out/
           retention-days: 3
+
+  # Tells the Setavaz panel how the run went («اعلان‌ها»: a finished render is info, a failed one rings once).
+  # Needs the Actions secret SETAVAZ_EVENTS_SECRET (= the app's EVENTS_SECRET); without it this job does nothing.
+  report:
+    needs: render
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Post the result to setavaz.ahura.cloud
+        env:
+          SECRET: ${{ secrets.SETAVAZ_EVENTS_SECRET }}
+          RESULT: ${{ needs.render.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WHICH: ${{ github.event_name == 'workflow_dispatch' && inputs.which || 'teaser, longform' }}
+        run: |
+          if [ -z "$SECRET" ]; then echo "no SETAVAZ_EVENTS_SECRET: nothing reported"; exit 0; fi
+          if [ "$RESULT" = "success" ]; then KIND=render.done; TITLE="ساخت تصویر روی GitHub تمام شد: $WHICH"; BODY="تصویر بی‌صداست؛ صدا روی لپ‌تاپ زیرش می‌رود. خروجی‌ها ۳ روز می‌مانند.";
+          elif [ "$RESULT" = "cancelled" ]; then echo "cancelled: nothing reported"; exit 0;
+          else KIND=render.failed; TITLE="ساخت تصویر روی GitHub نشد: $WHICH"; BODY="گزارش اجرا در GitHub."; fi
+          BODY_JSON=$(jq -cn --arg id "render.sr.${{ github.run_id }}.${{ github.run_attempt }}" --arg kind "$KIND" --arg title "$TITLE" --arg body "$BODY" --arg link "$RUN_URL" '{id:$id,kind:$kind,title:$title,body:$body,link:$link}')
+          T=$(date +%s)
+          SIG=$(printf '%s' "$T.$BODY_JSON" | openssl dgst -sha256 -hmac "$SECRET" -hex | sed 's/^.*= //')
+          curl -sS --max-time 20 -o /dev/null -w "setavaz: %{http_code}\n" -X POST https://setavaz.ahura.cloud/api/events \
+            -H 'content-type: application/json' -H "x-setavaz-time: $T" -H "x-setavaz-signature: $SIG" --data-binary "$BODY_JSON" || true
