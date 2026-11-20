@@ -19,11 +19,12 @@ export function master(song, base, title) {
 const decMono = (f) => { const b = execFileSync('ffmpeg', ['-v', 'error', '-i', f, '-ac', '1', '-ar', '22050', '-f', 'f32le', '-'], { maxBuffer: 1 << 28 }); return new Float32Array(b.buffer, b.byteOffset, b.length / 4) }
 const rms = (x, a, b) => { let s = 0, n = 0; for (let i = Math.max(0, a); i < Math.min(x.length, b); i++) { s += x[i] * x[i]; n++ } return 10 * Math.log10(s / Math.max(1, n) + 1e-12) }
 function fft(re, im) { const n = re.length; for (let i = 1, j = 0; i < n; i++) { let b = n >> 1; for (; j & b; b >>= 1) j ^= b; j ^= b; if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]] } } for (let len = 2; len <= n; len <<= 1) { const an = -2 * Math.PI / len; for (let i = 0; i < n; i += len) for (let k = 0; k < len / 2; k++) { const wr = Math.cos(an * k), wi = Math.sin(an * k), u = i + k, v = u + len / 2; const xr = re[v] * wr - im[v] * wi, xi = re[v] * wi + im[v] * wr; re[v] = re[u] - xr; im[v] = im[u] - xi; re[u] += xr; im[u] += xi } } }
-function chromaShare(x, tonicHz, mode) {
+export function chromaShare(x, tonicHz, mode) {
   const N = 8192, sr = 22050, ch = new Array(12).fill(0)
   for (let s = 0; s + N < x.length; s += N) { const re = new Float64Array(N), im = new Float64Array(N); for (let i = 0; i < N; i++) re[i] = x[s + i] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / N)); fft(re, im); for (let k = 1; k < N / 2; k++) { const f = k * sr / N; if (f < 90 || f > 1800) continue; const pc = ((Math.round(12 * Math.log2(f / 261.63)) % 12) + 12) % 12; ch[pc] += Math.hypot(re[k], im[k]) } }
   const t = 12 * Math.log2(tonicHz / 261.63), allowed = new Set()
-  for (const c of MODES[mode].cents) { const v = t + c / 100; allowed.add(((Math.floor(v + 1e-6) % 12) + 12) % 12); allowed.add(((Math.ceil(v - 1e-6) % 12) + 12) % 12) }
+  const pc = (v) => ((v % 12) + 12) % 12
+  for (const c of MODES[mode].cents) { const v = t + c / 100; if (Math.abs(v - Math.round(v)) < 0.2) allowed.add(pc(Math.round(v))); else { allowed.add(pc(Math.floor(v))); allowed.add(pc(Math.ceil(v))) } }
   const tot = ch.reduce((a, b) => a + b, 0); let inK = 0; for (const p of allowed) inK += ch[p]; return { share: inK / tot, allowed: [...allowed] }
 }
 export function qc(song, mp3, c) {

@@ -32,7 +32,7 @@ export function render(c, { lyriaLoop = null } = {}) {
       const bEnd = Math.min(sec.to, b0 + 8)
       for (let b = b0; b < bEnd; b++) {
         const muteLastBeat = b === sec.to - 1 && ['build', 'break', 'bridge', 'dropA'].includes(sec.role) // drop-out before the next section
-        for (const [inst, p] of Object.entries(pat)) for (let s = 0; s < grid; s++) { const ch = p[s]; if (!ch || ch === '.') continue; if (muteLastBeat && s >= grid * 3 / 4) continue; if (sec.role === 'intro' && b < sec.from + 4 && inst !== 'kick' && inst !== 'daf' && inst !== 'tom') continue; hit(inst, stepT(b, s), VEL[ch]) }
+        for (const [inst, p] of Object.entries(pat)) for (let s = 0; s < grid; s++) { const ch = p[s]; if (!ch || ch === '.') continue; if (muteLastBeat && s >= grid * 3 / 4) continue; if (sec.role === 'intro' && b < sec.from + 4 && inst !== 'daf' && inst !== 'tom' && inst !== 'shk') continue; if (sec.role === 'outro' && b >= sec.to - 2 && inst === 'kick') continue; hit(inst, stepT(b, s), VEL[ch]) }
         // fills: always at the end of 8, sometimes at the end of 4
         const last8 = (b - sec.from) % 8 === 7, last4 = (b - sec.from) % 4 === 3
         if (!muteLastBeat && sec.role !== 'outro' && sec.role !== 'intro' && (last8 || (last4 && r() < 0.5))) { const ft = FILLS[c.genre][Math.floor(r() * 3)]; for (const e of fill(ft, r, grid)) hit(e.inst, b * BAR + e.at * BEAT, e.v * (last8 ? 1 : 0.7), e.pan) }
@@ -47,7 +47,7 @@ export function render(c, { lyriaLoop = null } = {}) {
   for (const sec of sections) for (let b = sec.from; b < sec.to; b++) {
     const ch = chordAt(b, sec), role = sec.role
     // pad: open voicing one octave up
-    const padG = { intro: 0.55, build: 0.5, break: 0.75, bridge: 0.6, outro: 0.55, dropA: 0.28, dropB: 0.28, final: 0.3, switch: 0.2 }[role]
+    const padG = { intro: 0.4, build: 0.5, break: 0.75, bridge: 0.6, outro: 0.55, dropA: 0.28, dropB: 0.28, final: 0.3, switch: 0.2 }[role]
     if (padG) bus.pad.addSt(I.pad(ch.cents.map((x) => hzOf(T, x + 1200)), BAR, { bright: role === 'break' ? 900 : 1500 }), I.pad(ch.cents.map((x) => hzOf(T, x + 1200)), BAR, { bright: role === 'break' ? 850 : 1400 }), b * BAR, padG)
     // bass
     if (['intro', 'break', 'outro'].includes(role) || (role === 'build' && b < sec.from + 4)) continue
@@ -99,6 +99,11 @@ export function render(c, { lyriaLoop = null } = {}) {
   tvLowpass(bus.pad, (t) => (t >= build.from * BAR && t < build.to * BAR ? 500 + 4500 * ((t - build.from * BAR) / ((build.to - build.from) * BAR)) : 18000))
   const gaps = sections.filter((s) => ['dropA', 'switch', 'dropB', 'final'].includes(s.role)).map((s) => s.from * BAR)
   for (const k of ['pad', 'lead', 'counter', 'bass', 'tex']) bus[k].gainCurve((t) => (gaps.some((g) => t > g - BEAT / 2 && t < g) ? 0.03 : 1))
+  // ---- energy curve: per-section level of the drums and bass (1-bar ramps), so intro < build < drop and the bridge breathes ----
+  const EN = { intro: 0.42, build: [0.6, 0.95], dropA: 1, break: 0.6, switch: 0.9, dropB: 1, bridge: 0.62, final: 1.06, outro: 0.5 }
+  const enAt = (t) => { const b = t / BAR, s = sections.find((x) => b >= x.from && b < x.to) || sections[sections.length - 1]; const e = EN[s.role]; return Array.isArray(e) ? e[0] + (e[1] - e[0]) * (b - s.from) / (s.to - s.from) : e }
+  const enSmooth = (t) => { const a = enAt(t), p = enAt(Math.max(0, t - BAR)); const b = t / BAR, s = sections.find((x) => b >= x.from && b < x.to); if (s && b - s.from < 0.25) return p + (a - p) * ((b - s.from) / 0.25); return a }
+  bus.drums.gainCurve(enSmooth); bus.bass.gainCurve((t) => Math.min(1, enSmooth(t) * 1.05))
   // ---- sidechain from the kicks ----
   kicks.sort((a, b) => a - b)
   const duck = (depth, rel = 0.14) => { let ki = 0; return (t) => { while (ki + 1 < kicks.length && kicks[ki + 1] <= t) ki++; const dt = t - kicks[ki]; if (!(dt >= 0) || dt > 0.6) return 1; return 1 - depth * (dt < 0.004 ? dt / 0.004 : Math.exp(-(dt - 0.004) / rel)) } }
