@@ -84,7 +84,7 @@ test('the three plans: a window inside the track, cues where the sound turns, fe
 });
 
 test('the test jobs are the three worlds, and a job carries no sound, file name or checksum', () => {
-  assert.deepEqual(TRACKS, ['copper-storm', 'focus-long', 'focus-s1', 'last-ember', 'molten-midnight', 'night-drive-long', 'night-drive-s1', 'yalda-long', 'yalda-s1']);
+  assert.deepEqual(TRACKS, ['bazaar-lights-long', 'bazaar-lights-s1', 'copper-storm', 'focus-long', 'focus-s1', 'kahkeshan-long', 'kahkeshan-s1', 'last-ember', 'molten-midnight', 'night-drive-long', 'night-drive-s1', 'yalda-long', 'yalda-s1']);
   for (const t of TRACKS) {
     const raw = fs.readFileSync(path.join(HERE, 'jobs', `${t}.json`), 'utf8');
     assert.doesNotMatch(raw, /.(m4a|wav|mp3|flac|aac)|sha256|https?:/i, `${t}: numbers only`);

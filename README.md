@@ -42,5 +42,10 @@ so every render runs on free minutes.
   seconds (measured once from the master); the scene is a function of the track's time, so a Short and the long video
   show the same moment the same way, and `kit.mjs directShots` cuts each section on its downbeats. `kit.mjs fitPose`
   frames an object's bounding sphere for either shape of video.
+- **Bazaar Lights and Kahkeshan** (21 Nov 2026): a covered Persian bazaar at golden hour whose pierced brass lanterns light
+  one a beat on the drop and throw their stars on the vault in the breakdown (`scenes/bazaar.mjs`, `sets/bazaar.mjs`,
+  `models/lantern.mjs`, `models/spice.mjs`); a night camp in the desert where a brass astrolabe's rete turns with the music
+  under the Milky Way, which wheels round the pole in the second drop (`scenes/kahkeshan.mjs`, `sets/desert.mjs`,
+  `models/astrolabe.mjs`, `models/daf.mjs`). Textures in `textures/worlds.mjs`.
 - Locally: `cd r3 && npm ci && npm test`; a render needs Chrome and ffmpeg (`node render.mjs --job jobs/last-ember.json
   --stills`), so it belongs on the runners.

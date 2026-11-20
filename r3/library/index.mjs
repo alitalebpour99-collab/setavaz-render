@@ -13,6 +13,10 @@ import { makeTeaGlass } from './models/tea-glass.mjs';
 import { makeOpenBook } from './models/book.mjs';
 import { makeDeskLamp, makeHourglass, makeNotebook, makePencil } from './models/study.mjs';
 import { makeCluster, makeMirrorCharm, makeNazar, makeSteeringWheel } from './models/car.mjs';
+import { makeLantern, makeLanternStanding } from './models/lantern.mjs';
+import { makeSpiceBowl, makeSpiceStall } from './models/spice.mjs';
+import { makeAstrolabe, makeAstrolabeStand } from './models/astrolabe.mjs';
+import { makeDaf } from './models/daf.mjs';
 
 export const OBJECTS = [
   { id: 'setavaz-fire-bowl', make: () => makeFireBowl() },
@@ -39,5 +43,12 @@ export const OBJECTS = [
   { id: 'setavaz-steering-wheel', make: () => makeSteeringWheel() },
   { id: 'setavaz-nazar-bead', make: () => makeNazar() },
   { id: 'setavaz-mirror-charm', make: () => { const m = makeMirrorCharm(); m.userData.swing(0.1, 0.25); return m; } },
+  { id: 'setavaz-lantern', make: () => makeLanternStanding() },
+  { id: 'setavaz-lantern-hanging', make: () => makeLantern({ chain: 8, rod: 0.3 }) },
+  { id: 'setavaz-spice-bowl', make: () => makeSpiceBowl({ colour: '#c8410e', seed: 3 }) },
+  { id: 'setavaz-spice-stall', make: () => makeSpiceStall() },
+  { id: 'setavaz-astrolabe', make: () => makeAstrolabe() },
+  { id: 'setavaz-astrolabe-stand', make: () => makeAstrolabeStand() },
+  { id: 'setavaz-daf', make: () => makeDaf() },
 ];
 export { THREE };

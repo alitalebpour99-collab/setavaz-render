@@ -4,7 +4,7 @@
   "repo": "alitalebpour99-collab/setavaz-render",
   "root": "r3/library",
   "style": "lit-3d",
-  "asked": "Asked on 16 Nov 2026 before making these (ahura-hub lib/library/entries): no fire bowl, charcoal, weathervane, turret roof, crucible, mould, flame, lightning, storm cloud or rain entry existed in any project, so all are new. Asked again on 20 Nov 2026 (POST /api/library/find, kind model) before the Yalda, Night Drive and Focus worlds: no pomegranate, candle, candlestick, tea glass, saucer, book, desk lamp, notebook, pencil, hourglass, desk, car gauge, steering wheel, nazar bead, rear-view mirror or steam existed in any project (Pickwise has a cup and a counter, not these), so all are new.",
+  "asked": "Asked on 16 Nov 2026 before making these (ahura-hub lib/library/entries): no fire bowl, charcoal, weathervane, turret roof, crucible, mould, flame, lightning, storm cloud or rain entry existed in any project, so all are new. Asked again on 20 Nov 2026 (POST /api/library/find, kind model) before the Yalda, Night Drive and Focus worlds: no pomegranate, candle, candlestick, tea glass, saucer, book, desk lamp, notebook, pencil, hourglass, desk, car gauge, steering wheel, nazar bead, rear-view mirror or steam existed in any project (Pickwise has a cup and a counter, not these), so all are new. Asked again on 21 Nov 2026 (POST /api/library/find, kinds model3d, set, texture, prop) before the Bazaar Lights and Kahkeshan worlds: no lantern, astrolabe, daf, spice bowl, copper bowl, bazaar vault, desert dunes, Milky Way, brick or kilim existed in any project, so all are new.",
   "entries": [
     {
       "id": "setavaz-fire-bowl",
@@ -1053,6 +1053,463 @@
       "made": {
         "tool": "three.js code",
         "detail": "makeMirrorCharm(): an extruded rounded mirror with a metal glass, a cord, makeNazar and the extruded star; swing(x, z)"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-lantern",
+      "kind": "model",
+      "file": "models/lantern.mjs",
+      "symbol": "makeLanternStanding",
+      "names": {
+        "en": "Pierced brass lantern (fanus)",
+        "fa": "فانوس برنجی مشبک"
+      },
+      "depicts": "A Persian brass lantern pierced with rows of eight-point stars, an onion finial, a domed cap with a crown of spikes and a ring; lit from inside (the inner wall glows through the holes)",
+      "tags": [
+        "lantern",
+        "fanus",
+        "brass",
+        "persian",
+        "bazaar"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeBody(): an evenly sampled lathed bulb with a pierced alpha map (lanternPierceTexture), a glowing inner wall with the same holes, lathed finial and cap, eight cone spikes, a core and a sprite halo; light(k) 0..1.6"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-lantern-hanging",
+      "kind": "model",
+      "file": "models/lantern.mjs",
+      "symbol": "makeLantern",
+      "names": {
+        "en": "Brass lantern hanging on its chain",
+        "fa": "فانوس آویخته با زنجیر"
+      },
+      "depicts": "The pierced brass lantern hanging from a vault on a thin rod and a chain of oval links; it gives the directions of its holes so a scene can throw the star pattern on the walls",
+      "tags": [
+        "lantern",
+        "chain",
+        "bazaar",
+        "persian",
+        "light"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeLantern({ chain, rod }): a brass rod, makeChain() oval torus links turned alternately, the lantern body below; userData.holes are unit directions from its centre"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-spice-bowl",
+      "kind": "model",
+      "file": "models/spice.mjs",
+      "symbol": "makeSpiceBowl",
+      "names": {
+        "en": "Copper bowl heaped with spice",
+        "fa": "کاسهٔ مسی پر از ادویه"
+      },
+      "depicts": "A hammered copper bowl with a rough heap of ground spice (its surface pushed in and out by noise, slumped at the base)",
+      "tags": [
+        "spice",
+        "copper",
+        "bowl",
+        "bazaar",
+        "persian"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeSpiceBowl(): a lathed copper bowl (copperRoughTexture, grain bump) and an open cone displaced by fbm noise, coloured per spice"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-spice-stall",
+      "kind": "model",
+      "file": "models/spice.mjs",
+      "symbol": "makeSpiceStall",
+      "names": {
+        "en": "Spice seller’s stall",
+        "fa": "بساط ادویه‌فروش"
+      },
+      "depicts": "A low walnut table with a kilim runner and six copper bowls of turmeric, sumac, saffron, dried rose, cardamom and cinnamon",
+      "tags": [
+        "spice",
+        "stall",
+        "bazaar",
+        "table",
+        "kilim"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeSpiceStall(): box table, legs and apron, a kilim runner (kilimTexture) with a hanging flap, six makeSpiceBowl heaps; userData.cones gives each heap and colour"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-bazaar-arcade",
+      "kind": "set",
+      "file": "sets/bazaar.mjs",
+      "symbol": "makeBazaarArcade",
+      "names": {
+        "en": "Covered bazaar street with brick vaults",
+        "fa": "راستهٔ بازار سرپوشیده با طاق آجری"
+      },
+      "depicts": "A Persian covered bazaar street: a fired-brick barrel vault in bays with a round skylight and a slanting sun shaft in each, brick arches on pilasters, arched shop fronts with carpets and copper pots, stone paving, the bright arch of the street’s mouth",
+      "tags": [
+        "bazaar",
+        "vault",
+        "brick",
+        "arcade",
+        "persian",
+        "skylight"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeBazaarArcade(): half cylinders per bay (brickTexture, brickBump), extruded walls with arched holes, shop recesses, torus arches on box pilasters, additive shaft cones (shaftTexture), paving (pavingTexture); userData.sun(k, tint) and hit(origin, dir) for light spots"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-astrolabe",
+      "kind": "model",
+      "file": "models/astrolabe.mjs",
+      "symbol": "makeAstrolabe",
+      "names": {
+        "en": "Persian brass astrolabe",
+        "fa": "اسطرلاب برنجی ایرانی"
+      },
+      "depicts": "A brass astrolabe: the mater with a raised rim and degree marks, the engraved plate, the openwork rete with the zodiac ring and star pointers whose tips light up, the rule, the throne (kursi) with its shackle and ring",
+      "tags": [
+        "astrolabe",
+        "brass",
+        "astronomy",
+        "persian",
+        "stars",
+        "instrument"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeAstrolabe(): cylinder mater, torus limb, 72 instanced ticks, the plate (astrolabePlateTexture: lines only), the rete of tori, bars, tracery arcs and extruded blades with glowing tips, a box rule with cone ends and a pin, an extruded pierced crest; turn(a), rule(a), stars(k)"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-astrolabe-stand",
+      "kind": "model",
+      "file": "models/astrolabe.mjs",
+      "symbol": "makeAstrolabeStand",
+      "names": {
+        "en": "Wooden pole with a brass hook",
+        "fa": "تیرک چوبی با قلاب برنجی"
+      },
+      "depicts": "A wooden pole planted in the ground with an arm, a brass cap and a hook to hang an astrolabe from",
+      "tags": [
+        "pole",
+        "stand",
+        "wood",
+        "hook",
+        "camp"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeAstrolabeStand(): two cylinders, a sphere cap and a partial torus hook; userData.hook is where the ring hangs"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-daf",
+      "kind": "model",
+      "file": "models/daf.mjs",
+      "symbol": "makeDaf",
+      "names": {
+        "en": "Daf (Persian frame drum)",
+        "fa": "دف"
+      },
+      "depicts": "The large Persian frame drum: a wide wooden hoop, a domed goat skin, and the small iron rings hung all round the inside of the frame",
+      "tags": [
+        "daf",
+        "drum",
+        "frame drum",
+        "persian",
+        "music",
+        "instrument"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeDaf(): open cylinders and torus edges for the hoop, a domed circle skin (dafSkinTexture), 44 torus rings on pivots; strike(k, t) warms the skin and swings the rings"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-desert-dunes",
+      "kind": "set",
+      "file": "sets/desert.mjs",
+      "symbol": "makeDunes",
+      "names": {
+        "en": "Desert dunes by night",
+        "fa": "تپه‌های شنی کویر در شب"
+      },
+      "depicts": "Rolling desert dunes with sharp crests across the wind, flat near the camp so things stand on it",
+      "tags": [
+        "desert",
+        "dunes",
+        "sand",
+        "night",
+        "lut"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeDunes(): a displaced plane (duneHeight: ridged sine crests and fbm swell, flat within a radius), sandTexture and sandBump"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-milky-way",
+      "kind": "set",
+      "file": "sets/desert.mjs",
+      "symbol": "makeMilkyWay",
+      "names": {
+        "en": "The Milky Way over the desert",
+        "fa": "کهکشان راه شیری بر فراز کویر"
+      },
+      "depicts": "The Milky Way across the night sky: a dense band of faint stars, warm towards the core, cut by dust lanes, a soft glow along it and brighter stars all over; it can brighten and turn about the pole",
+      "tags": [
+        "milky way",
+        "stars",
+        "night sky",
+        "kahkeshan",
+        "galaxy"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeMilkyWay(): 9000 points in a tilted band (gaussian latitude, fbm dust lanes, warm-cool colour), 140 additive glow sprites, 420 bright points; glow(k), spin(a)"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-brick",
+      "kind": "texture",
+      "file": "textures/worlds.mjs",
+      "symbol": "brickTexture",
+      "names": {
+        "en": "Fired brick (bazaar vault)",
+        "fa": "آجر (طاق بازار)"
+      },
+      "depicts": "Warm ochre fired bricks in running bond with pale lime mortar",
+      "tags": [
+        "brick",
+        "texture",
+        "bazaar",
+        "wall"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "brickTexture(): DataTexture from tile2 noise, four bricks by eight courses a tile; brickBump for the joints"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-paving",
+      "kind": "texture",
+      "file": "textures/worlds.mjs",
+      "symbol": "pavingTexture",
+      "names": {
+        "en": "Worn stone paving",
+        "fa": "سنگ‌فرش ساییده"
+      },
+      "depicts": "Large pale stone slabs with soft dark joints",
+      "tags": [
+        "stone",
+        "paving",
+        "floor",
+        "texture"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "pavingTexture(): DataTexture, offset slabs shaded by tile2 noise"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-lantern-pierce",
+      "kind": "texture",
+      "file": "textures/worlds.mjs",
+      "symbol": "lanternPierceTexture",
+      "names": {
+        "en": "Lantern pierce pattern",
+        "fa": "نقش مشبک فانوس"
+      },
+      "depicts": "The alpha map of a pierced lantern: rows of eight-point stars, small round holes and dotted rings, solid bands top and bottom",
+      "tags": [
+        "lantern",
+        "pattern",
+        "star",
+        "alpha",
+        "texture"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "lanternPierceTexture(): DataTexture, white metal and black holes"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-sand",
+      "kind": "texture",
+      "file": "textures/worlds.mjs",
+      "symbol": "sandTexture",
+      "names": {
+        "en": "Desert sand",
+        "fa": "شن کویر"
+      },
+      "depicts": "Fine desert sand with soft wind ripples",
+      "tags": [
+        "sand",
+        "desert",
+        "texture",
+        "ripples"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "sandTexture() and sandBump(): DataTextures from sine ripples bent by tile2 noise"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-daf-skin",
+      "kind": "texture",
+      "file": "textures/worlds.mjs",
+      "symbol": "dafSkinTexture",
+      "names": {
+        "en": "Daf goat skin",
+        "fa": "پوست دف"
+      },
+      "depicts": "Warm cream goat skin, mottled, darker towards the frame",
+      "tags": [
+        "daf",
+        "skin",
+        "drum",
+        "texture"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "dafSkinTexture(): radial DataTexture with tile2 mottling"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-astrolabe-plate",
+      "kind": "texture",
+      "file": "textures/worlds.mjs",
+      "symbol": "astrolabePlateTexture",
+      "names": {
+        "en": "Astrolabe plate engraving",
+        "fa": "حکاکی صفحهٔ اسطرلاب"
+      },
+      "depicts": "The engraved plate of an astrolabe on brass: circles of altitude, azimuth lines, the horizon, the tropics and the equator; lines only, no letters",
+      "tags": [
+        "astrolabe",
+        "engraving",
+        "brass",
+        "texture"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "astrolabePlateTexture(): DataTexture of distance-to-line ink on aged brass"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tex-kilim",
+      "kind": "texture",
+      "file": "textures/worlds.mjs",
+      "symbol": "kilimTexture",
+      "names": {
+        "en": "Kilim weave",
+        "fa": "نقش گلیم"
+      },
+      "depicts": "A flat-woven kilim: rows of stepped diamonds in madder red, indigo, ochre and ivory with striped ends",
+      "tags": [
+        "kilim",
+        "rug",
+        "weave",
+        "persian",
+        "texture"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "kilimTexture(): DataTexture of stepped diamonds over a weave"
       },
       "licence": {
         "kind": "own",
