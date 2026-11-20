@@ -262,6 +262,8 @@ export function build({ plan }) {
     }
     skyCol.needsUpdate = true;
     sunGroup.position.y = lerp(-8, 3.5, d);
+    sunGroup.visible = d > 0.002; // no glow at the horizon before the dawn
+    sunGlow.material.opacity = Math.min(1, d * 1.5);
     stars.children.forEach((p) => { p.material.opacity = 1 - 0.85 * d; });
     dawn.intensity = 1.6 * d;
     scene.fog.color.set('#100a1c').lerp(new THREE.Color('#4a2a3a'), d);

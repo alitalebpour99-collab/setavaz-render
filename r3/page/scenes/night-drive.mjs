@@ -10,10 +10,11 @@
 import * as THREE from 'three';
 import { makeCluster, makeDashboard, makeMirrorCharm, makeSteeringWheel } from '../../library/models/car.mjs';
 import { glowTexture } from '../../library/textures/data.mjs';
+import { makeSkyDome } from '../../library/sets/night.mjs';
 import { rng } from '../../library/util/noise.mjs';
 import { clamp, directShots, ease, fitPose, fovFor, joinSpheres, lerp, seg, shake, smooth, soundOf, sphereOf, trackMarks } from '../kit.mjs';
 
-export const look = { bloom: { strength: 0.55, radius: 0.65, threshold: 0.85 }, exposure: 1.15 };
+export const look = { bloom: { strength: 0.55, radius: 0.65, threshold: 0.85 }, exposure: 1.4 };
 export const env = { base: '#0a0a12', panels: [{ dir: [0, 0.6, -1], colour: '#ff9a40', power: 0.8, size: 14 }, { dir: [0.4, 1, 0.3], colour: '#5a6aa8', power: 0.9, size: 10 }] };
 
 const S = 10; // the car is drawn ten times its size (metres to decimetres)
@@ -68,7 +69,9 @@ export function build({ plan }) {
   scene.fog = new THREE.Fog('#0b0a14', 60, 900);
 
   // ---- outside: the road, the lamps, the far city ----
-  const road = new THREE.Mesh(new THREE.PlaneGeometry(400, 4000), new THREE.MeshStandardMaterial({ color: '#16161c', roughness: 0.55, metalness: 0.1 }));
+  // the night sky over the road: deep blue at the top, a warm city haze at the horizon
+  scene.add(makeSkyDome({ top: '#03030c', horizon: '#2a1f3a', bottom: '#050508', radius: 2600 }));
+  const road = new THREE.Mesh(new THREE.PlaneGeometry(400, 4000), new THREE.MeshStandardMaterial({ color: '#07070a', roughness: 0.92, metalness: 0.0 }));
   road.rotation.x = -Math.PI / 2;
   road.position.set(0, -2, -2000);
   road.receiveShadow = false;
@@ -130,7 +133,7 @@ export function build({ plan }) {
   car.scale.setScalar(S);
   scene.add(car);
   const dash = makeDashboard(1.6);
-  dash.position.set(0, 1.0, -0.5);
+  dash.position.set(0, 1.0, -0.58); // its face stops just behind the cluster, which stands proud of it
   const cluster = makeCluster();
   cluster.position.set(-0.37, 0.93, 0.0);
   cluster.rotation.x = -0.12;
@@ -158,10 +161,13 @@ export function build({ plan }) {
   const signalLight = new THREE.PointLight('#ff2a1a', 0, 400, 1.2);
   scene.add(signalLight);
   const dashGlow = new THREE.PointLight('#ffb070', 1.2, 14, 1.6);
-  dashGlow.position.set(-3.7, 9.6, 1.2);
-  const moon = new THREE.DirectionalLight('#6f7fd0', 0.35);
+  dashGlow.position.set(-3.7, 9.4, 1.6);
+  const moon = new THREE.DirectionalLight('#8090e0', 1.1);
   moon.position.set(20, 60, -30);
-  scene.add(dashGlow, moon, new THREE.HemisphereLight('#262a48', '#0a0a10', 0.55));
+  // the cabin's own soft light (the city's glow through the glass), so the shapes read in the dark
+  const cabin = new THREE.PointLight('#8f9cd8', 1.6, 30, 1.5);
+  cabin.position.set(0, 15, 6);
+  scene.add(dashGlow, moon, cabin, new THREE.HemisphereLight('#3a4070', '#120e14', 1.0));
   scene.environmentIntensity = 0.6;
 
   // ---- the camera ----
@@ -232,7 +238,7 @@ export function build({ plan }) {
       l.position.set(n.g.userData.side * 55, 67, n.g.position.z);
       // brightest as the lamp goes over the windscreen, a little brighter on the kick
       const over = Math.exp(-Math.pow((n.off - 0.5) / 7, 2));
-      l.intensity = (v > 0.5 ? 1 : 0.6) * (760 * over + 40) * (1 + (inDrop ? 0.3 * kick : 0));
+      l.intensity = (v > 0.5 ? 1 : 0.6) * (1400 * over + 60) * (1 + (inDrop ? 0.3 * kick : 0));
     }
     // the far city slides by slowly
     for (let i = 0; i < cityN; i++) {
@@ -257,7 +263,7 @@ export function build({ plan }) {
     speedo.userData.needle(0.06 + 0.78 * (v / vFast) + 0.01 * Math.sin(T * 3));
     tacho.userData.needle((v > 0.2 ? 0.3 + 0.25 * (v / vFast) : 0.12) + 0.32 * kick * (inDrop ? 1 : 0.4) + 0.05 * loud);
     for (const g of [speedo, tacho]) g.userData.light(0.6 + 0.4 * loud + (inDrop ? 0.5 * kick : 0));
-    dashGlow.intensity = 0.9 + 0.8 * loud + (inDrop ? 1.4 * kick : 0.3 * hit);
+    dashGlow.intensity = 1.6 + 1.0 * loud + (inDrop ? 2.0 * kick : 0.4 * hit);
     // the charm
     const [sx, sz] = swing(t);
     mirror.userData.swing(sx, sz);

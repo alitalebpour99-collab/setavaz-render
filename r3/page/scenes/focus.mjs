@@ -81,9 +81,9 @@ export function build({ plan }) {
   spot.shadow.mapSize.set(1024, 1024);
   spot.shadow.bias = -0.0006; spot.shadow.radius = 4;
   scene.add(spot, spot.target);
-  const windowLight = new THREE.DirectionalLight('#6878c8', 0.55);
+  const windowLight = new THREE.DirectionalLight('#6878c8', 0.9);
   windowLight.position.set(4, 6, -8);
-  const room = new THREE.HemisphereLight('#2c2e48', '#1a120c', 0.5);
+  const room = new THREE.HemisphereLight('#383a5c', '#22180f', 0.85);
   const bulbGlow = new THREE.PointLight('#ffcf8a', 2.2, 16, 1.6);
   scene.add(windowLight, room, bulbGlow);
   scene.environmentIntensity = 0.5;
@@ -120,13 +120,13 @@ export function build({ plan }) {
   const aspect = plan.w / plan.h;
   // the spheres to frame (the pencil moves over the page, the hourglass turns over: their widest states)
   const sNote = sphereOf([note], 0.08);
-  const sGlass = joinSpheres(sphereOf([glass], 0.05), sphereOf([steam[0]], 0.0));
+  const sGlass = sphereOf([glass], 0.08);
   sand.rotation.z = Math.PI / 2; desk.updateMatrixWorld(true);
   const sSand = joinSpheres(sphereOf([sand], 0.05), (sand.rotation.z = 0, desk.updateMatrixWorld(true), sphereOf([sand], 0.05)));
   const sLamp = sphereOf([lamp], 0.05);
   const sDesk = sphereOf([note, glass, sand], 0.04);
   const sAll = sphereOf([note, glass, sand, lamp], 0.03);
-  const F = (sp, az, el, k, heroes, shift) => ({ ...fitPose(sp, { az, el, k, fov, aspect, shift }), heroes });
+  const F = (sp, az, el, k, heroes, shift) => ({ ...fitPose(sp, { az, el, k: 1 + (k - 1) * 0.45, fov, aspect, shift }), heroes });
   const bank = {
     intro: [
       (u) => F(sAll, lerp(-0.35, -0.2, u), lerp(0.42, 0.36, u), lerp(1.2, 1.12, u), [note, glass, sand, lamp]),
