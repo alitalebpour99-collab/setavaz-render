@@ -1,0 +1,31 @@
+name: studio-render
+# Setavaz studio v1: composes, arranges, mixes, masters and quality-checks songs in code (Node + ffmpeg), then uploads
+# the MP3s and their reports as an artifact. Runs once per push to a feat/studio-* branch, or on demand.
+on:
+  workflow_dispatch:
+    inputs:
+      concepts:
+        description: 'space-separated concept files'
+        default: 'studio/concepts/kavir-e-shab.json studio/concepts/baran.json studio/concepts/lenj-e-ghoroob.json'
+  push:
+    branches: ['feat/studio-*']
+    paths: ['studio/**', '.github/workflows/studio-render.yml']
+concurrency: { group: studio-render, cancel-in-progress: true }
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: render
+        env:
+          CONCEPTS: ${{ github.event.inputs.concepts || 'studio/concepts/kavir-e-shab.json studio/concepts/baran.json studio/concepts/lenj-e-ghoroob.json' }}
+        run: |
+          mkdir -p out
+          for c in $CONCEPTS; do node --max-old-space-size=4096 studio/bin/make.mjs --out out --concept "$c" --tries 3; done
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with: { name: studio-demos, path: out/, retention-days: 7 }
