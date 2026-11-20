@@ -19,7 +19,16 @@ const PROGS = { // degree loops (4 chords); filtered per mode so every chord exi
   bright: [[0, 3, 4, 0], [0, 5, 3, 4], [3, 4, 0, 0], [0, 4, 5, 3]],
   floating: [[0, 3, 0, 5], [0, 6, 3, 0], [5, 6, 0, 0]],
 }
-export function progression(mode, flavour, rnd) { const list = (PROGS[flavour] || PROGS.dark).filter((p) => p.every((d) => chordOn(mode, d))); const p = list.length ? list[Math.floor(rnd() * list.length)] : [0, 0, 0, 0]; return p.map((d) => ({ deg: d, cents: chordOn(mode, d) || [0, 700, 1200] })) }
+export function progression(mode, flavour, rnd) {
+  const list = (PROGS[flavour] || PROGS.dark).filter((p) => p.every((d) => chordOn(mode, d)))
+  let p = list.length ? list[Math.floor(rnd() * list.length)] : null
+  if (!p) { // no loop of this flavour fits the mode: build one from the degrees that do carry a chord (never a static one-chord loop)
+    const ok = [1, 2, 3, 4, 5, 6].filter((d) => chordOn(mode, d)); const pick = () => ok[Math.floor(rnd() * ok.length)]
+    const a = pick(); let b = pick(), t = 0; while (b === a && t++ < 8) b = pick()
+    p = ok.length ? (flavour === 'bright' ? [0, a, b, 0] : [0, 0, a, b]) : [0, 0, 0, 0]
+  }
+  return p.map((d) => ({ deg: d, cents: chordOn(mode, d) || [0, 700, 1200] }))
+}
 // ---- motif composer ----
 // a note: { s: start in grid steps, l: length in steps, d: scale degree (0 = tonic, may be negative/above 7), v: velocity, orn }
 const RHYTHMS = { // 2-bar (32 sixteenths) rhythm cells with an accent profile, typical of each hook idea

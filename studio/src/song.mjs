@@ -100,7 +100,7 @@ export function render(c, { lyriaLoop = null } = {}) {
   const gaps = sections.filter((s) => ['dropA', 'switch', 'dropB', 'final'].includes(s.role)).map((s) => s.from * BAR)
   for (const k of ['pad', 'lead', 'counter', 'bass', 'tex']) bus[k].gainCurve((t) => (gaps.some((g) => t > g - BEAT / 2 && t < g) ? 0.03 : 1))
   // ---- energy curve: per-section level of the drums and bass (1-bar ramps), so intro < build < drop and the bridge breathes ----
-  const EN = { intro: 0.42, build: [0.6, 0.95], dropA: 1, break: 0.6, switch: 0.9, dropB: 1, bridge: 0.62, final: 1.06, outro: 0.5 }
+  const EN = { intro: 0.42, build: [0.5, 0.8], dropA: 1, break: 0.6, switch: 0.9, dropB: 1, bridge: 0.62, final: 1.06, outro: 0.5 }
   const enAt = (t) => { const b = t / BAR, s = sections.find((x) => b >= x.from && b < x.to) || sections[sections.length - 1]; const e = EN[s.role]; return Array.isArray(e) ? e[0] + (e[1] - e[0]) * (b - s.from) / (s.to - s.from) : e }
   const enSmooth = (t) => { const a = enAt(t), p = enAt(Math.max(0, t - BAR)); const b = t / BAR, s = sections.find((x) => b >= x.from && b < x.to); if (s && b - s.from < 0.25) return p + (a - p) * ((b - s.from) / 0.25); return a }
   bus.drums.gainCurve(enSmooth); bus.bass.gainCurve((t) => Math.min(1, enSmooth(t) * 1.05))
