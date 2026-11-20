@@ -232,7 +232,7 @@ export function build({ plan }) {
       l.position.set(n.g.userData.side * 55, 67, n.g.position.z);
       // brightest as the lamp goes over the windscreen, a little brighter on the kick
       const over = Math.exp(-Math.pow((n.off - 0.5) / 7, 2));
-      l.intensity = (v > 0.5 ? 1 : 0.6) * (1400 * over + 60) * (1 + (inDrop ? 0.3 * kick : 0));
+      l.intensity = (v > 0.5 ? 1 : 0.6) * (1400 * over + 60) * (1 + (inDrop ? 0.6 * hit : 0.3 * hit));
     }
     // the far city slides by slowly
     for (let i = 0; i < cityN; i++) {
@@ -257,7 +257,9 @@ export function build({ plan }) {
     speedo.userData.needle(0.06 + 0.78 * (v / vFast) + 0.01 * Math.sin(T * 3));
     tacho.userData.needle((v > 0.2 ? 0.3 + 0.25 * (v / vFast) : 0.12) + 0.32 * kick * (inDrop ? 1 : 0.4) + 0.05 * loud);
     for (const g of [speedo, tacho]) g.userData.light(0.6 + 0.4 * loud + (inDrop ? 0.5 * kick : 0));
-    dashGlow.intensity = 1.6 + 1.0 * loud + (inDrop ? 2.0 * kick : 0.4 * hit);
+    // the cabin keeps the beat: the gauges' light swells on every hit
+    dashGlow.intensity = 1.6 + 1.0 * loud + (inDrop ? 3.2 * hit : 1.6 * hit);
+    cabin.intensity = 1.6 * (1 + (inDrop ? 0.7 : 0.4) * hit);
     // the charm
     const [sx, sz] = swing(t);
     mirror.userData.swing(sx, sz);
@@ -270,7 +272,7 @@ export function build({ plan }) {
     heroes.push(...pose.heroes);
     const pre = (T >= D1 - 1.2 && T < D1) || (T >= D2 - 1.2 && T < D2) ? 0.85 : 1;
     return {
-      exposure: look.exposure * pre * (1 + 0.5 * punch) * (waiting ? 1.05 : 1),
+      exposure: look.exposure * pre * (1 + 0.5 * punch) * (waiting ? 1.05 : 1) * (1 + 0.14 * hit),
       bloom: look.bloom.strength * (1 + 0.8 * punch + (inDrop ? 0.3 * kick : 0)),
       shot: shots.shots.indexOf(shots.shotAt(t)),
     };
