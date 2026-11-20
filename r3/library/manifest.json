@@ -4,7 +4,7 @@
   "repo": "alitalebpour99-collab/setavaz-render",
   "root": "r3/library",
   "style": "lit-3d",
-  "asked": "Asked on 16 Nov 2026 before making these (ahura-hub lib/library/entries): no fire bowl, charcoal, weathervane, turret roof, crucible, mould, flame, lightning, storm cloud or rain entry existed in any project, so all are new.",
+  "asked": "Asked on 16 Nov 2026 before making these (ahura-hub lib/library/entries): no fire bowl, charcoal, weathervane, turret roof, crucible, mould, flame, lightning, storm cloud or rain entry existed in any project, so all are new. Asked again on 20 Nov 2026 (POST /api/library/find, kind model) before the Yalda, Night Drive and Focus worlds: no pomegranate, candle, candlestick, tea glass, saucer, book, desk lamp, notebook, pencil, hourglass, desk, car gauge, steering wheel, nazar bead, rear-view mirror or steam existed in any project (Pickwise has a cup and a counter, not these), so all are new.",
   "entries": [
     {
       "id": "setavaz-fire-bowl",
@@ -651,6 +651,408 @@
       "made": {
         "tool": "three.js code",
         "detail": "crucibleHeatTexture(): a gradient along the lathe's section, 64 px"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-pomegranate",
+      "kind": "model",
+      "file": "models/pomegranate.mjs",
+      "symbol": "makePomegranate",
+      "names": {
+        "en": "Pomegranate with its crown",
+        "fa": "انار با تاج"
+      },
+      "depicts": "A whole pomegranate about 9 cm across: glossy deep-red skin with five soft ribs and the six-pointed crown",
+      "tags": [
+        "pomegranate",
+        "fruit",
+        "yalda",
+        "red",
+        "winter night"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makePomegranate(): one lathed outline with ribs and noise pushed into it; the crown is a flared lathe tube with six cones"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-pomegranate-half",
+      "kind": "model",
+      "file": "models/pomegranate.mjs",
+      "symbol": "makePomegranateHalf",
+      "names": {
+        "en": "Pomegranate cut in half",
+        "fa": "نیمهٔ انار"
+      },
+      "depicts": "Half a pomegranate cut across: the red rind, cream pith with the pale membranes, and about seventy glossy ruby seeds",
+      "tags": [
+        "pomegranate",
+        "seeds",
+        "aril",
+        "yalda",
+        "cut fruit"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makePomegranateHalf(): the half outline lathed, a pith face drawn by code (pithTexture), the seeds as one InstancedMesh"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-pomegranate-opening",
+      "kind": "model",
+      "file": "models/pomegranate.mjs",
+      "symbol": "makeOpeningPomegranate",
+      "names": {
+        "en": "Pomegranate that opens",
+        "fa": "انار که باز می‌شود"
+      },
+      "depicts": "A pomegranate as two halves: open(0) is the whole fruit, open(1) the top half turned over onto the table, seeds up",
+      "tags": [
+        "pomegranate",
+        "open",
+        "yalda",
+        "animation"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeOpeningPomegranate(): two makePomegranateHalf; the resting place of the top half is measured so it never sinks into the table"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-candlestick",
+      "kind": "model",
+      "file": "models/candle.mjs",
+      "symbol": "makeCandlestick",
+      "names": {
+        "en": "Turned brass candlestick",
+        "fa": "شمعدان برنجی"
+      },
+      "depicts": "A short brass candlestick: a wide foot, a turned stem with rings, a drip tray and a cup",
+      "tags": [
+        "candlestick",
+        "brass",
+        "candle",
+        "table"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeCandlestick(): one lathed section, brass with fine grain"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-candle",
+      "kind": "model",
+      "file": "models/candle.mjs",
+      "symbol": "makeLitCandle",
+      "names": {
+        "en": "Lit ivory candle in a brass candlestick",
+        "fa": "شمع روشن در شمعدان"
+      },
+      "depicts": "A tall ivory candle with a melted lip and two drips, a black wick and a living flame, in the brass candlestick",
+      "tags": [
+        "candle",
+        "flame",
+        "light",
+        "yalda",
+        "night"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeLitCandle(): a lathed wax body that glows a little with the flame, capsule drips, effects/flame.mjs sheets for the flame"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-tea-glass",
+      "kind": "model",
+      "file": "models/tea-glass.mjs",
+      "symbol": "makeTeaGlass",
+      "names": {
+        "en": "Estekan of tea on a saucer",
+        "fa": "استکان چای در نعلبکی"
+      },
+      "depicts": "The small waisted Persian tea glass full of dark amber tea, on a white porcelain saucer with a gold rim; the tea surface can ripple",
+      "tags": [
+        "tea",
+        "estekan",
+        "glass",
+        "persian",
+        "saucer"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeTeaGlass(): lathed glass (outline and inside), lathed tea, a polar-grid surface the scene ripples; a lathed saucer and a gold torus rim"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-divan-book",
+      "kind": "model",
+      "file": "models/book.mjs",
+      "symbol": "makeOpenBook",
+      "names": {
+        "en": "Open book of poems (divan)",
+        "fa": "دیوان شعر باز"
+      },
+      "depicts": "An open divan: dark red leather boards with gold tooling, two curved page blocks with verses in two columns drawn as ink strokes (no letters), and a loose page that turns",
+      "tags": [
+        "book",
+        "poetry",
+        "divan",
+        "yalda",
+        "hafez night"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeOpenBook(): boxes for boards and blocks, bent planes for the pages (versePageTexture), one page that turns about the spine"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-desk-lamp",
+      "kind": "model",
+      "file": "models/study.mjs",
+      "symbol": "makeDeskLamp",
+      "names": {
+        "en": "Articulated desk lamp",
+        "fa": "چراغ مطالعهٔ مفصل‌دار"
+      },
+      "depicts": "A desk lamp in dark green enamel and brass: round base, two arms with ball joints, a conical shade with a glowing bulb",
+      "tags": [
+        "lamp",
+        "desk",
+        "study",
+        "night",
+        "light"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeDeskLamp(): lathed base and shade, cylinder arms, sphere joints; pose(b1, b2, tilt) bends it"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-notebook",
+      "kind": "model",
+      "file": "models/study.mjs",
+      "symbol": "makeNotebook",
+      "names": {
+        "en": "Open spiral notebook with handwriting",
+        "fa": "دفتر باز با دست‌خط"
+      },
+      "depicts": "A spiral notebook open flat on ruled cream pages; the right page fills with dark blue handwriting line by line (ink strokes, never letters)",
+      "tags": [
+        "notebook",
+        "writing",
+        "study",
+        "focus",
+        "paper"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeNotebook(): boxes and planes, ruledPageTexture, a shader that draws the ink up to write(k); penAt(k) says where the pen is"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-pencil",
+      "kind": "model",
+      "file": "models/study.mjs",
+      "symbol": "makePencil",
+      "names": {
+        "en": "Wooden pencil",
+        "fa": "مداد چوبی"
+      },
+      "depicts": "A hexagonal ochre pencil with a sharpened wooden tip, graphite point, metal ferrule and pink eraser",
+      "tags": [
+        "pencil",
+        "writing",
+        "study",
+        "desk"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makePencil(): hexagonal cylinder, cones and small cylinders"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-hourglass",
+      "kind": "model",
+      "file": "models/study.mjs",
+      "symbol": "makeHourglass",
+      "names": {
+        "en": "Brass and walnut hourglass",
+        "fa": "ساعت شنی"
+      },
+      "depicts": "An hourglass: two glass bulbs between walnut discs held by three turned brass posts; the sand runs with sand(k)",
+      "tags": [
+        "hourglass",
+        "time",
+        "sand",
+        "study",
+        "focus"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeHourglass(): lathed glass, discs and posts; the sand as two cones and a thread scaled by sand(k)"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-car-cluster",
+      "kind": "model",
+      "file": "models/car.mjs",
+      "symbol": "makeCluster",
+      "names": {
+        "en": "Car instrument cluster",
+        "fa": "صفحهٔ آمپر خودرو"
+      },
+      "depicts": "Two round car gauges with chrome bezels, backlit amber faces with ticks (no numbers) and orange needles, in a black binnacle under a curved hood",
+      "tags": [
+        "car",
+        "gauge",
+        "speedometer",
+        "dashboard",
+        "night drive"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeCluster(): makeGauge() twice (lathed bezel, dialTexture face, box needle) in a box and an extruded hood"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-steering-wheel",
+      "kind": "model",
+      "file": "models/car.mjs",
+      "symbol": "makeSteeringWheel",
+      "names": {
+        "en": "Three-spoke steering wheel",
+        "fa": "فرمان سه‌پره"
+      },
+      "depicts": "A leather three-spoke steering wheel with the gold Setavaz star on its hub",
+      "tags": [
+        "car",
+        "steering wheel",
+        "driving",
+        "night drive"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeSteeringWheel(): a torus rim, a cylinder hub, three boxes and the star shape"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-nazar-bead",
+      "kind": "model",
+      "file": "models/car.mjs",
+      "symbol": "makeNazar",
+      "names": {
+        "en": "Nazar bead (evil-eye glass bead)",
+        "fa": "مهرهٔ چشم‌نظر"
+      },
+      "depicts": "A cobalt-blue glass bead with the white, pale blue and dark blue eye on its front",
+      "tags": [
+        "nazar",
+        "bead",
+        "charm",
+        "glass",
+        "persian"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeNazar(): a sphere and three sphere caps of glossy glass"
+      },
+      "licence": {
+        "kind": "own",
+        "name": "own procedural work"
+      },
+      "origin": "setavaz"
+    },
+    {
+      "id": "setavaz-mirror-charm",
+      "kind": "model",
+      "file": "models/car.mjs",
+      "symbol": "makeMirrorCharm",
+      "names": {
+        "en": "Rear-view mirror with a hanging charm",
+        "fa": "آینهٔ جلو با آویز"
+      },
+      "depicts": "A car rear-view mirror on its stem with a charm hanging below on a red cord: a nazar bead and a gold four-point star that swing",
+      "tags": [
+        "car",
+        "mirror",
+        "charm",
+        "nazar",
+        "star",
+        "night drive"
+      ],
+      "made": {
+        "tool": "three.js code",
+        "detail": "makeMirrorCharm(): an extruded rounded mirror with a metal glass, a cord, makeNazar and the extruded star; swing(x, z)"
       },
       "licence": {
         "kind": "own",

@@ -5,6 +5,10 @@ import { beatSync } from './sync.mjs';
 
 export const SAFE = { left: 60, right: 900, top: 220, bottom: 1500 };
 export const LIMITS = { minS: 20, maxS: 30, bytes: 30 * 1024 * 1024, words: 6, textShare: 0.4, textSize: 96, margin: 0.012, sync: 0.2, climax: 1.25 };
+/** The long video (16:9, the whole track): words on far fewer of its frames, a title-safe frame inside YouTube's player. */
+export const SAFE_LONG = { left: 96, right: 1824, top: 70, bottom: 1020 };
+export const LIMITS_LONG = { ...LIMITS, minS: 60, maxS: 600, bytes: 600 * 1024 * 1024, textShare: 0.15, textSize: 100 };
+export const limitsOf = (plan) => (plan.format === 'long' ? { safe: SAFE_LONG, limits: LIMITS_LONG } : { safe: SAFE, limits: LIMITS });
 const OUT_WORDS = /\b(out now|available now|listen now|stream now|streaming now)\b/i;
 
 const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
@@ -14,6 +18,7 @@ const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
  * the file exists. never: words that are never written. Returns { ok, checks: [{ id, ok, detail }] }.
  */
 export function verdict({ plan, frames, file = null, never = [] }) {
+  const { safe: SAFE, limits: LIMITS } = limitsOf(plan);
   const checks = [];
   const add = (id, ok, detail = '') => checks.push({ id, ok: Boolean(ok), detail });
   const fps = plan.fps;

@@ -2,6 +2,8 @@
 // small, for a few seconds near the start (the signature) and on the end card with «Coming soon»; a small badge in the
 // bottom-left corner at the close. English only. Everything else on the frame is the picture.
 export const SAFE = { left: 60, right: 900, top: 220, bottom: 1500 };
+/** The long video's title-safe frame (16:9). */
+export const SAFE_LONG = { left: 96, right: 1824, top: 70, bottom: 1020 };
 const IVORY = '#F6ECD3';
 const GOLD = '#F4C35A';
 
@@ -17,6 +19,8 @@ const fade = (t, from, to, fin, fout) => {
   if (t < from || t > to) return 0;
   return Math.max(0, Math.min(1, (t - from) / fin, fout > 0 ? (to - t) / fout : 1));
 };
+
+const SAFE_SHORT = SAFE;
 
 export function makeOverlay({ w, h, brand }) {
   const star = new Path2D(brand.star.d);
@@ -61,6 +65,8 @@ export function makeOverlay({ w, h, brand }) {
   /** Draws the finish and the words of time t over the picture already on ctx. Returns the words shown: rows for the gate. */
   function draw(ctx, plan, t, anchors, frameIndex = 0) {
     const rows = [];
+    const SAFE = plan.format === 'long' ? SAFE_LONG : SAFE_SHORT;
+    const endDefault = plan.format === 'long' ? [w / 2, h * 0.44] : [(SAFE.left + SAFE.right) / 2, 560];
     // vignette (the fine grain is added by ffmpeg when the file is encoded)
     if (!vignette) {
       vignette = ctx.createRadialGradient(w / 2, h / 2, h * 0.28, w / 2, h / 2, h * 0.74);
@@ -85,7 +91,7 @@ export function makeOverlay({ w, h, brand }) {
         if (a <= 0) continue;
         // the picture settles a little under the card
         ctx.save(); ctx.globalAlpha = 0.3 * a; ctx.fillStyle = '#05040c'; ctx.fillRect(0, 0, w, h); ctx.restore();
-        const [ax, ay] = anchors?.end ? anchors.end() : [(SAFE.left + SAFE.right) / 2, 560];
+        const [ax, ay] = anchors?.end ? anchors.end() : endDefault;
         const size = x.size, lh = size * 1.04, mark = Math.round(size * 0.55), soon = x.soonSize;
         const blockH = mark + size * 0.34 + x.lines.length * lh + size * 0.2 + soon;
         let y = ay - blockH / 2 + (1 - a) * 10;

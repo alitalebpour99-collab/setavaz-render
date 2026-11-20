@@ -7,6 +7,12 @@ import { makeTurretRoof } from './models/turret-roof.mjs';
 import { makeCrucible, makeCruciblePot } from './models/crucible.mjs';
 import { makeMoltenRing, makeRingMould, metalColour } from './models/ring-mould.mjs';
 import { makeFlame } from './effects/flame.mjs';
+import { makeOpeningPomegranate, makePomegranate, makePomegranateHalf } from './models/pomegranate.mjs';
+import { makeCandlestick, makeLitCandle } from './models/candle.mjs';
+import { makeTeaGlass } from './models/tea-glass.mjs';
+import { makeOpenBook } from './models/book.mjs';
+import { makeDeskLamp, makeHourglass, makeNotebook, makePencil } from './models/study.mjs';
+import { makeCluster, makeMirrorCharm, makeNazar, makeSteeringWheel } from './models/car.mjs';
 
 export const OBJECTS = [
   { id: 'setavaz-fire-bowl', make: () => makeFireBowl() },
@@ -18,5 +24,20 @@ export const OBJECTS = [
   { id: 'setavaz-crucible-pot', make: () => makeCruciblePot() },
   { id: 'setavaz-crucible', make: () => { const c = makeCrucible(); c.setTilt(0.5); return c.group; } },
   { id: 'setavaz-ring-mould', make: () => { const m = makeRingMould(); const metal = makeMoltenRing(); metal.userData.set(0.7, metalColour(0.8)); m.add(metal); return m; } },
+  { id: 'setavaz-pomegranate', make: () => makePomegranate() },
+  { id: 'setavaz-pomegranate-half', make: () => makePomegranateHalf() },
+  { id: 'setavaz-pomegranate-opening', make: () => { const p = makeOpeningPomegranate(); p.open(1); return p.group; } },
+  { id: 'setavaz-candlestick', make: () => makeCandlestick() },
+  { id: 'setavaz-candle', make: () => makeLitCandle() },
+  { id: 'setavaz-tea-glass', make: () => makeTeaGlass() },
+  { id: 'setavaz-divan-book', make: () => { const b = makeOpenBook(); b.userData.turn(0.35); return b; } },
+  { id: 'setavaz-desk-lamp', make: () => makeDeskLamp() },
+  { id: 'setavaz-notebook', make: () => { const n = makeNotebook(); n.userData.write(0.6); return n; } },
+  { id: 'setavaz-pencil', make: () => { const p = makePencil(); p.rotation.z = Math.PI / 2; return p; } },
+  { id: 'setavaz-hourglass', make: () => { const h = makeHourglass(); h.userData.sand(0.4); return h; } },
+  { id: 'setavaz-car-cluster', make: () => { const c = makeCluster(); c.userData.gauges.forEach((g, i) => g.userData.needle(0.3 + 0.3 * i)); return c; } },
+  { id: 'setavaz-steering-wheel', make: () => makeSteeringWheel() },
+  { id: 'setavaz-nazar-bead', make: () => makeNazar() },
+  { id: 'setavaz-mirror-charm', make: () => { const m = makeMirrorCharm(); m.userData.swing(0.1, 0.25); return m; } },
 ];
 export { THREE };

@@ -1,4 +1,4 @@
-// The plan of a round-3 Short: which seconds of the track, where its strongest moments are (measured from the sound),
+// The plan of a round-3 video (a 9:16 Short, or since 20 Nov 2026 a 16:9 long video of the whole track): which seconds of the track, where its strongest moments are (measured from the sound),
 // and the few words. The picture itself is page/scenes/<scene>.mjs; it reads only what this returns.
 // Everything comes from the job the Setavaz app sends with the dispatch (lib/r3job.ts in the app's private repo): the
 // track's name, tempo and length, its round-3 world, and the window's sound as numbers only (onsets and loudness per
@@ -11,6 +11,10 @@ export const FPS = 30;
 export const W = 1080;
 export const H = 1920;
 export const JOB_VERSION = 1;
+/** The two shapes of a Setavaz video: the 9:16 Short (a window of whole bars) and the 16:9 long video (the whole track). */
+export const FORMATS = { short: { w: 1080, h: 1920 }, long: { w: 1920, h: 1080 } };
+/** A long video is drawn in parts of about this many frames, each part on its own runner (r3.yml, what = r3-long). */
+export const PART_FRAMES = 600;
 
 /** A job from a file: plain JSON, or the dispatch input as it arrives (gzip, then base64). */
 export function readJob(file) {
@@ -27,7 +31,10 @@ export function checkJob(job) {
   const t = job.track;
   if (!t || t.id !== job.trackId || typeof t.titleEn !== 'string' || !(t.bpm > 0) || !(t.durationMs > 0)) bad('track');
   const c = job.conf;
-  if (!c || !/^[a-z0-9-]{1,40}$/.test(String(c.scene)) || !(c.bars > 0) || !(c.startS >= 0)) bad('conf');
+  if (!c || !/^[a-z0-9-]{1,40}$/.test(String(c.scene)) || !(c.startS >= 0)) bad('conf');
+  if (c.format !== undefined && !FORMATS[c.format]) bad(`format ${c.format}`);
+  if ((c.format ?? 'short') === 'short' ? !(c.bars > 0) : !(c.lengthS > 0)) bad('conf length');
+  if (c.marks !== undefined && (!c.marks || typeof c.marks !== 'object' || Object.values(c.marks).some((v) => !Number.isFinite(v)))) bad('marks');
   if (typeof job.artist !== 'string' || !job.brand?.star?.d) bad('artist or brand');
   if (!Array.isArray(job.never)) bad('never');
   const b = job.beats;
@@ -91,6 +98,25 @@ export function cuesFor(scene, { rms, onsets, bar, L }) {
   return out;
 }
 
+/**
+ * The cues of a world that knows its track: the sections' starts in the TRACK's time (conf.marks, measured once from
+ * the master and kept with the world), moved into the window (seconds from its start) and snapped to the nearest low
+ * hit when inside it. `dropT` is the first drop inside the window (the gate's climax and the cover frame).
+ */
+export function cuesFromMarks(marks, { a0, L, onsets }) {
+  const out = { measured: {}, marks: {} };
+  const lows = onsets.filter((o) => o.low >= 0.3);
+  for (const [k, T] of Object.entries(marks)) {
+    const t = T - a0;
+    const s = t > 0.2 && t < L - 0.2 ? snap(lows, t, 0.12) : t;
+    out.marks[k] = +s.toFixed(3);
+    out.measured[k] = s !== t;
+  }
+  const drops = Object.entries(out.marks).filter(([k, t]) => /^drop/.test(k) && t >= 1.5 && t < L - 3).sort((a, b) => a[1] - b[1]);
+  if (drops.length) out.dropT = drops[0][1];
+  return out;
+}
+
 /** Split a title over lines of at most `max` letters (for the end card inside the ring). */
 const linesOf = (title, max) => (title.length <= max ? [title] : title.split(' '));
 
@@ -100,8 +126,10 @@ const linesOf = (title, max) => (title.length <= max ? [title] : title.split(' '
  */
 export function makeR3Plan({ job, today = new Date().toISOString().slice(0, 10) }) {
   const { trackId, track, conf: c, beats: sound } = job;
+  const format = c.format ?? 'short';
+  const { w, h } = FORMATS[format];
   const beat = 60 / track.bpm, bar = 4 * beat;
-  const L = +(c.bars * bar).toFixed(3);
+  const L = +(format === 'long' ? c.lengthS : c.bars * bar).toFixed(3);
   const a0 = c.startS;
   if (a0 + L > track.durationMs / 1000 + 0.05) throw new Error(`the window of «${trackId}» runs past the track's end`);
   const frames = Math.round(L * FPS);
@@ -109,17 +137,39 @@ export function makeR3Plan({ job, today = new Date().toISOString().slice(0, 10) 
   const out = Boolean(job.outOn && job.outOn <= today);
   const title = track.titleEn;
   const endLines = linesOf(title, c.endMax ?? 99);
-  const cues = cuesFor(c.scene, { rms: sound.rms, onsets: sound.onsets, bar, L });
-  const endFrom = +(L - (c.endS ?? 2.7)).toFixed(3);
-  const texts = [
-    { role: 'signature', lines: [title], from: 0.9, to: Math.min(3.7, endFrom - 1), size: 60, y: 1392 },
-    { role: 'end', lines: endLines, soon: out ? 'Out now' : 'Coming soon', from: endFrom, size: c.endSize ?? 84, soonSize: 28 },
-    { role: 'badge', name: job.artist, from: +(endFrom + 0.3).toFixed(3), to: +(L - 0.15).toFixed(3), size: 30, y: 1456 },
-  ];
+  const cues = c.marks ? cuesFromMarks(c.marks, { a0, L, onsets: sound.onsets }) : cuesFor(c.scene, { rms: sound.rms, onsets: sound.onsets, bar, L });
+  const soon = out ? 'Out now' : 'Coming soon';
+  let texts;
+  if (format === 'long') {
+    // the long video: the name once at the start (lower third), the badge once when the first drop has settled (bottom
+    // left, never in the middle), the end card over the last seconds
+    const endFrom = +(L - (c.endS ?? 7)).toFixed(3);
+    const badgeAt = +Math.min(endFrom - 12, Math.max(12, (cues.dropT ?? 20) + 10)).toFixed(3);
+    texts = [
+      { role: 'signature', lines: [title], from: 1.2, to: 6.4, size: 52, y: 952 },
+      { role: 'badge', name: job.artist, from: badgeAt, to: +(badgeAt + 6.5).toFixed(3), size: 30, y: 1000 },
+      { role: 'end', lines: endLines, soon, from: endFrom, size: c.endSize ?? 92, soonSize: 28 },
+    ];
+  } else {
+    const endFrom = +(L - (c.endS ?? 2.7)).toFixed(3);
+    texts = [
+      { role: 'signature', lines: [title], from: 0.9, to: Math.min(3.7, endFrom - 1), size: 60, y: 1392 },
+      { role: 'end', lines: endLines, soon, from: endFrom, size: c.endSize ?? 84, soonSize: 28 },
+      { role: 'badge', name: job.artist, from: +(endFrom + 0.3).toFixed(3), to: +(L - 0.15).toFixed(3), size: 30, y: 1456 },
+    ];
+  }
   return {
-    id: `r3-${trackId}`, style: 'r3', scene: c.scene, lang: 'en', w: W, h: H, fps: FPS, frames,
+    id: `r3-${trackId}`, style: 'r3', format, scene: c.scene, lang: 'en', w, h, fps: FPS, frames,
     track: { id: track.id, titleEn: title, bpm: track.bpm }, out,
-    a0, L, bars: c.bars, bar: +bar.toFixed(4), beat: +beat.toFixed(4),
+    a0, L, bars: c.bars ?? null, bar: +bar.toFixed(4), beat: +beat.toFixed(4),
     sound: { source: sound.source }, onsets: sound.onsets, rms: sound.rms, low: sound.low, cues, texts,
   };
+}
+
+/** How many parts a plan is drawn in: a Short in one, a long video in parts of about PART_FRAMES frames. */
+export const partsOf = (plan) => (plan.format === 'long' ? Math.max(1, Math.ceil(plan.frames / PART_FRAMES)) : 1);
+/** The frames [from, to) of part k of n. */
+export function partRange(plan, k, n = partsOf(plan)) {
+  const size = Math.ceil(plan.frames / n);
+  return { from: Math.min(plan.frames, k * size), to: Math.min(plan.frames, (k + 1) * size) };
 }
