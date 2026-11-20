@@ -199,7 +199,8 @@ export function build({ plan }) {
     // the lamp: it breathes with the music, a little brighter on the kicks in the main parts; it dims at the end
     const off = smooth(seg(T, OUT + 2, END + 1));
     const breath = T >= BR && T < D2 ? 0.86 : 1;
-    const power = breath * (1 - 0.82 * off) * (1 + (inDrop ? 0.3 * kick : 0.1 * hit) + 0.06 * loud);
+    // the lamp is the beat's light: it swells on every kick (strongly in the main parts), so the picture breathes in time
+    const power = breath * (1 - 0.82 * off) * (1 + (inDrop ? 0.6 * hit + 0.3 * kick : 0.45 * hit) + 0.06 * loud);
     spot.intensity = 14 * power;
     bulbGlow.intensity = 2.4 * power;
     lamp.userData.bulb(power);
@@ -213,7 +214,7 @@ export function build({ plan }) {
     heroes.push(...pose.heroes);
     const pre = (T >= D1 - 1.2 && T < D1) || (T >= D2 - 1.2 && T < D2) ? 0.84 : 1;
     return {
-      exposure: look.exposure * pre * (1 + 0.42 * punch) * (1 - 0.25 * off),
+      exposure: look.exposure * pre * (1 + 0.42 * punch) * (1 - 0.25 * off) * (1 + 0.12 * hit),
       bloom: look.bloom.strength * (1 + 0.8 * punch + (inDrop ? 0.3 * kick : 0)),
       shot: shots.shots.indexOf(shots.shotAt(t)),
     };
