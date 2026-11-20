@@ -139,7 +139,7 @@ if (part !== null) {
 // for the owner's look (never uploaded anywhere): a contact sheet, a frame-by-frame sheet, a cover frame
 ff(['-i', mp4, '-vf', 'fps=1/2,scale=216:-2,tile=7x2:padding=6:color=0x0C0930', '-frames:v', '1', '-q:v', '3', path.join(outDir, `${id}-sheet.jpg`)]);
 ff(['-i', mp4, '-vf', 'fps=2,scale=180:-2,tile=10x6:padding=4:color=0x0C0930', '-frames:v', '1', '-q:v', '3', path.join(outDir, `${id}-sheet2.jpg`)]);
-const coverAt = (plan.cues.dropT ?? plan.cues.closeT) + 0.4;
+const coverAt = (plan.cues.dropT ?? plan.cues.closeT ?? 0.1) + 0.4;
 ff(['-ss', coverAt.toFixed(2), '-i', mp4, '-frames:v', '1', '-q:v', '2', path.join(outDir, `${id}-cover.jpg`)]);
 
 const v = verdict({ plan, frames, file: { bytes: fs.statSync(mp4).size }, never });

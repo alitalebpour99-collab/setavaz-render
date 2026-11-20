@@ -42,5 +42,13 @@ so every render runs on free minutes.
   seconds (measured once from the master); the scene is a function of the track's time, so a Short and the long video
   show the same moment the same way, and `kit.mjs directShots` cuts each section on its downbeats. `kit.mjs fitPose`
   frames an object's bounding sphere for either shape of video.
+- **Persian-geometry worlds** (21 Nov 2026, the owner's new standard for every song): `page/scenes/geo.mjs`, one fragment
+  shader per world (`geo-kahkeshan`: a turning girih of stars over a desert sky; `geo-bazaar`: a muqarnas dome seen from
+  below with hanging lanterns). Truly audio-reactive from `beats.bands` in the job (kick, bass, hat, melody, hue and the
+  kick and melody hits, measured from the master off this repo, numbers only): kick -> rings and pulses, hats -> shimmer,
+  melody -> hue, bass -> breathing, the drop -> the pattern blooms. Every motion turns one symmetry step a period, so
+  the format `loop` (a 9:16 Short of whole bars that starts ON the drop) is seamless, and a long video or an hour is the
+  same period repeated. The loop's gate: 8 to 16 s, the small title and the badge still on every frame, no end card,
+  a seam check on the first and last frame.
 - Locally: `cd r3 && npm ci && npm test`; a render needs Chrome and ffmpeg (`node render.mjs --job jobs/last-ember.json
   --stills`), so it belongs on the runners.

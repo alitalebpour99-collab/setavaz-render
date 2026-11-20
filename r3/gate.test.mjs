@@ -204,3 +204,45 @@ test('a long video is drawn in parts that cover every frame once, in order', () 
   }
   assert.equal(partsOf(planOf('last-ember')), 1);
 });
+
+// The Persian-geometry loops (Ali 21 Nov 2026): 8 to 16 s, ON the drop, seamless, the small title and badge on every
+// frame and nothing else; the world reads its bands round the loop, so its last frame flows into its first.
+function loopJob(scene = 'geo-kahkeshan') {
+  const j = structuredClone(jobOf('last-ember'));
+  j.conf = { ...j.conf, scene, format: 'loop', bars: 8, marks: { drop1: j.conf.startS } };
+  const n = j.beats.rms.length;
+  const wave = (k) => Array.from({ length: n }, (_, f) => +(0.5 + 0.5 * Math.sin((f / n) * Math.PI * 2 * k)).toFixed(2));
+  j.beats.bands = { fps: 30, frames: n, cyclic: true, kick: wave(32), bass: wave(8), hat: wave(64), mel: wave(4), hue: wave(1), kicks: j.beats.onsets.filter((o) => o.low >= 0.45).map((o) => ({ t: o.t, s: o.s })), melOn: [{ t: 3, s: 0.8 }] };
+  return j;
+}
+test('a geometry loop: its plan, its words on every frame, its seam and its gate', async () => {
+  for (const scene of ['geo-kahkeshan', 'geo-bazaar']) {
+    const plan = makeR3Plan({ job: loopJob(scene) });
+    assert.equal(plan.format, 'loop');
+    assert.deepEqual([plan.w, plan.h], [1080, 1920]);
+    assert.deepEqual(plan.texts.map((x) => x.role), ['tag']);
+    const tagRows = () => [{ role: 'tag-title', text: plan.track.titleEn, size: 34, opacity: 1, x0: 66, x1: 300, y0: 1390, y1: 1426 }, { role: 'badge', text: 'Setavaz', size: 28, opacity: 1, x0: 66, x1: 280, y0: 1442, y1: 1472 }];
+    const frames = Array.from({ length: plan.frames }, (_, f) => ({ f, luma: 0.2 + (f < 8 || f === plan.frames - 1 ? 0.05 : 0), rows: tagRows(), box: f % 3 === 0 ? { x0: 0.49, y0: 0.49, x1: 0.51, y1: 0.51, behind: false } : null }));
+    const v = verdict({ plan, frames, file: { bytes: 9e6 }, never });
+    assert.deepEqual(failed(v), [], JSON.stringify(v.checks.filter((c) => !c.ok)));
+    // a frame with no title, or a seam that jumps, is refused
+    const cut = frames.map((x, i) => (i === frames.length - 1 ? { ...x, rows: [] } : x));
+    assert.ok(failed(verdict({ plan, frames: cut, never })).includes('signature'));
+    const jump = frames.map((x, i) => (i === frames.length - 1 ? { ...x, luma: 0.5 } : x));
+    assert.ok(failed(verdict({ plan, frames: jump, never })).includes('seam'));
+    // the world: builds without a browser, turns one symmetry step a loop, reads the bands round the loop
+    const mod = await import('./page/scenes/geo.mjs');
+    const world = mod.build({ plan });
+    const u = () => Object.fromEntries(Object.entries(world.scene.children[0].material.uniforms).map(([k, x]) => [k, x.value]));
+    world.update(0); const a = u();
+    world.update(plan.L - 1e-6); const b = u();
+    for (const k of ['uKick', 'uBass', 'uHat', 'uMel', 'uHue']) assert.ok(Math.abs(a[k] - b[k]) < 0.25, `${k} ${a[k]} ${b[k]}`);
+    assert.ok(Math.abs(a.uBloom - b.uBloom) < 0.01 && a.uBloom > 0.95, 'open on the drop at both ends');
+    assert.ok(a.uPh < 0.01 && b.uPh > 0.99);
+    const { screenBox } = await import('./page/kit.mjs');
+    const box = screenBox(world.heroes, world.camera);
+    assert.ok(box.x0 > 0.4 && box.x1 < 0.6 && !box.behind, JSON.stringify(box));
+  }
+  // the bands, when given, must be whole
+  assert.throws(() => checkJob({ ...loopJob(), beats: { ...loopJob().beats, bands: { kick: [1] } } }), /bands/);
+});

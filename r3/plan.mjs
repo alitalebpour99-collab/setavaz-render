@@ -12,7 +12,9 @@ export const W = 1080;
 export const H = 1920;
 export const JOB_VERSION = 1;
 /** The two shapes of a Setavaz video: the 9:16 Short (a window of whole bars) and the 16:9 long video (the whole track). */
-export const FORMATS = { short: { w: 1080, h: 1920 }, long: { w: 1920, h: 1080 } };
+export const FORMATS = { short: { w: 1080, h: 1920 }, long: { w: 1920, h: 1080 }, loop: { w: 1080, h: 1920 } };
+/** A loop (21 Nov 2026): a 9:16 Short of whole bars that starts ON the drop and whose last frame flows into its first. */
+export const isLoop = (plan) => plan.format === 'loop';
 /** A long video is drawn in parts of about this many frames, each part on its own runner (r3.yml, what = r3-long). */
 export const PART_FRAMES = 600;
 
@@ -22,6 +24,9 @@ export function readJob(file) {
   const json = raw.startsWith('{') ? raw : zlib.gunzipSync(Buffer.from(raw, 'base64')).toString('utf8');
   return checkJob(JSON.parse(json));
 }
+
+/** Bands, when given (the geometry worlds), are per-frame number lists of the same length. */
+const b0 = (b) => b !== undefined && b !== null && (typeof b !== 'object' || !['kick', 'bass', 'hat', 'mel', 'hue'].every((k) => Array.isArray(b[k]) && b[k].length === b.kick.length) || !Array.isArray(b.kicks) || !Array.isArray(b.melOn));
 
 /** The job's shape, so a broken dispatch fails in a second with a reason, not after the browser started. */
 export function checkJob(job) {
@@ -33,7 +38,8 @@ export function checkJob(job) {
   const c = job.conf;
   if (!c || !/^[a-z0-9-]{1,40}$/.test(String(c.scene)) || !(c.startS >= 0)) bad('conf');
   if (c.format !== undefined && !FORMATS[c.format]) bad(`format ${c.format}`);
-  if ((c.format ?? 'short') === 'short' ? !(c.bars > 0) : !(c.lengthS > 0)) bad('conf length');
+  if ((c.format ?? 'short') !== 'long' ? !(c.bars > 0) : !(c.lengthS > 0)) bad('conf length');
+  if (b0(job.beats?.bands)) bad('bands');
   if (c.marks !== undefined && (!c.marks || typeof c.marks !== 'object' || Object.values(c.marks).some((v) => !Number.isFinite(v)))) bad('marks');
   if (typeof job.artist !== 'string' || !job.brand?.star?.d) bad('artist or brand');
   if (!Array.isArray(job.never)) bad('never');
@@ -150,6 +156,9 @@ export function makeR3Plan({ job, today = new Date().toISOString().slice(0, 10) 
       { role: 'badge', name: job.artist, from: badgeAt, to: +(badgeAt + 6.5).toFixed(3), size: 30, y: 1000 },
       { role: 'end', lines: endLines, soon, from: endFrom, size: c.endSize ?? 92, soonSize: 28 },
     ];
+  } else if (format === 'loop') {
+    // a loop: no end card and no fades (its last frame flows into its first); only the small title and the badge, still
+    texts = [{ role: 'tag', lines: [title], name: job.artist, from: 0, to: L + 1, size: 34, y: 1418 }];
   } else {
     const endFrom = +(L - (c.endS ?? 2.7)).toFixed(3);
     texts = [
@@ -162,7 +171,8 @@ export function makeR3Plan({ job, today = new Date().toISOString().slice(0, 10) 
     id: `r3-${trackId}`, style: 'r3', format, scene: c.scene, lang: 'en', w, h, fps: FPS, frames,
     track: { id: track.id, titleEn: title, bpm: track.bpm }, out,
     a0, L, bars: c.bars ?? null, bar: +bar.toFixed(4), beat: +beat.toFixed(4),
-    sound: { source: sound.source }, onsets: sound.onsets, rms: sound.rms, low: sound.low, cues, texts,
+    sound: { source: sound.source }, onsets: sound.onsets, rms: sound.rms, low: sound.low, bands: sound.bands ?? null, cues, texts,
+    loopBars: c.loopBars ?? 8,
   };
 }
 

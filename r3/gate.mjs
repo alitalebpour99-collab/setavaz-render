@@ -8,7 +8,9 @@ export const LIMITS = { minS: 20, maxS: 30, bytes: 30 * 1024 * 1024, words: 6, t
 /** The long video (16:9, the whole track): words on far fewer of its frames, a title-safe frame inside YouTube's player. */
 export const SAFE_LONG = { left: 96, right: 1824, top: 70, bottom: 1020 };
 export const LIMITS_LONG = { ...LIMITS, minS: 60, maxS: 600, bytes: 600 * 1024 * 1024, textShare: 0.15, textSize: 100 };
-export const limitsOf = (plan) => (plan.format === 'long' ? { safe: SAFE_LONG, limits: LIMITS_LONG } : { safe: SAFE, limits: LIMITS });
+/** The loop (Ali 21 Nov 2026: 8 to 15 s, ON the drop, seamless): the small title and badge stay on every frame. */
+export const LIMITS_LOOP = { ...LIMITS, minS: 7.9, maxS: 16, textShare: 1, textSize: 40, seam: 0.03 };
+export const limitsOf = (plan) => (plan.format === 'long' ? { safe: SAFE_LONG, limits: LIMITS_LONG } : plan.format === 'loop' ? { safe: SAFE, limits: LIMITS_LOOP } : { safe: SAFE, limits: LIMITS });
 const OUT_WORDS = /\b(out now|available now|listen now|stream now|streaming now)\b/i;
 
 const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
@@ -38,14 +40,24 @@ export function verdict({ plan, frames, file = null, never = [] }) {
   add('few-words', most <= LIMITS.words && share <= LIMITS.textShare && big <= LIMITS.textSize, `${most} words at once, words on ${(share * 100).toFixed(0)}% of the frames, largest ${big} px`);
 
   const title = plan.track.titleEn;
-  const sig = seen.some((r) => r.role === 'signature' && r.text === title && r.opacity >= 0.9 && r.f / fps < 6);
+  const loop = plan.format === 'loop';
+  if (loop) {
+    // the small title and the badge on the first and the last frame alike, nothing else; the picture's seam
+    const tagOf = (x) => x.rows.filter((r) => r.role === 'tag-title' && r.opacity >= 0.9).map((r) => r.text).join(' ');
+    const first = frames[0], lastF = frames[frames.length - 1];
+    add('signature', tagOf(first) === title && tagOf(lastF) === title, `title «${tagOf(first)}» … «${tagOf(lastF)}»`);
+    add('badge', [first, lastF].every((x) => x.rows.some((r) => r.role === 'badge' && r.opacity >= 0.9)), 'the badge on the first and last frame');
+    const seam = Math.abs(first.luma - lastF.luma);
+    add('seam', frames.length < plan.frames - 1 || seam <= LIMITS.seam, `first and last frame differ by ${seam.toFixed(3)} in brightness`);
+  }
+  const sig = loop ? true : seen.some((r) => r.role === 'signature' && r.text === title && r.opacity >= 0.9 && r.f / fps < 6);
   const last = frames[frames.length - 1];
   const endTitle = last.rows.filter((r) => r.role === 'end-title' && r.opacity >= 0.9).map((r) => r.text).join(' ');
-  add('signature', sig && endTitle === title, `signature ${sig ? 'shown' : 'missing'}, end card «${endTitle}»`);
+  if (!loop) add('signature', sig && endTitle === title, `signature ${sig ? 'shown' : 'missing'}, end card «${endTitle}»`);
 
   const soon = last.rows.find((r) => r.role === 'end-soon');
   const saysOut = texts.some((x) => OUT_WORDS.test(x));
-  add('soon', plan.out ? Boolean(soon) : soon?.text === 'Coming soon' && !saysOut, `«${soon?.text ?? ''}»${plan.out ? ' (the catalogue says it is out)' : ''}`);
+  if (!loop) add('soon', plan.out ? Boolean(soon) : soon?.text === 'Coming soon' && !saysOut, `«${soon?.text ?? ''}»${plan.out ? ' (the catalogue says it is out)' : ''}`);
 
   const bad = texts.filter((x) => never.some((w) => w && x.toLowerCase().includes(String(w).toLowerCase())));
   add('copy', bad.length === 0, bad.join(' | '));
@@ -67,10 +79,16 @@ export function verdict({ plan, frames, file = null, never = [] }) {
     const sync = beatSync(luma, plan.onsets, Math.min(luma.length, plan.frames));
     add('beat-sync', sync.r >= LIMITS.sync, `r ${sync.r.toFixed(2)} at ${sync.lag} frames`);
     const cue = plan.cues.dropT ?? plan.cues.closeT;
+    // a loop starts ON the drop: its climax is the bloom on its first frames, against the calmest part of the loop
+    if (loop) {
+      const open = Math.max(...luma.slice(0, 8)), calm = Math.min(...luma.map((_, i) => mean(luma.slice(i, i + 15))).slice(0, Math.max(1, luma.length - 15)));
+      add('climax', open >= 1.1 * calm, `the drop opens at ${open.toFixed(3)}, the calmest second ${calm.toFixed(3)}`);
+    } else {
     const f = Math.round(cue * fps);
     const before = mean(luma.slice(Math.max(0, f - 18), Math.max(1, f - 3)));
     const after = Math.max(...luma.slice(f, f + 8));
     add('climax', after >= LIMITS.climax * before, `at ${cue} s the picture goes from ${before.toFixed(3)} to ${after.toFixed(3)}`);
+    }
   }
 
   if (file) {
