@@ -105,12 +105,27 @@ export function makeOverlay({ w, h, brand }) {
         y += size * 0.2 + soon;
         const b = text(ctx, x.soon.toUpperCase(), ax, y, { size: soon, family: 'Inter Display', weight: 600, colour: GOLD, spacing: soon * 0.2, align: 'center', alpha: a });
         rows.push({ role: 'end-soon', text: x.soon, size: soon, opacity: +a.toFixed(3), x0: b.x0, x1: b.x1, y0: b.y0, y1: b.y1 });
+      } else if (x.role === 'tag') {
+        // a loop's small title and badge: still on every frame (no fade, so the last frame is the first)
+        const size = x.size;
+        const t1 = text(ctx, x.lines[0], SAFE.left + 6, x.y, { size, weight: 500 });
+        rows.push({ role: 'tag-title', text: x.lines[0], size, opacity: 1, x0: t1.x0, x1: t1.x1, y0: t1.y0, y1: t1.y1 });
+        rows.push(...drawBadge(ctx, x.name, 28, x.y + 46, 1, SAFE.left));
       } else if (x.role === 'badge') {
         const a = fade(t, x.from, x.to, 0.4, 0.3);
         if (a <= 0) continue;
-        const size = x.size, y = x.y, x0 = SAFE.left + 6;
+        rows.push(...drawBadge(ctx, x.name, x.size, x.y, a, SAFE.left));
+      }
+    }
+    return rows;
+  }
+  /** The minimal badge: the star, the channel's name, a tiny heart and a tiny follow mark (bottom left, never mid-frame). */
+  function drawBadge(ctx, name, size, y, a, left) {
+    {
+      {
+        const x0 = left + 6;
         ctx.save(); ctx.globalAlpha = a; drawStar(ctx, x0 + size * 0.4, y - size * 0.32, size * 0.8, GOLD); ctx.restore();
-        const b = text(ctx, x.name, x0 + size * 1.05, y, { size, family: 'Inter Display', weight: 600, alpha: a });
+        const b = text(ctx, name, x0 + size * 1.05, y, { size, family: 'Inter Display', weight: 600, alpha: a });
         // a tiny heart and a tiny follow mark
         ctx.save();
         ctx.globalAlpha = a;
@@ -126,10 +141,9 @@ export function makeOverlay({ w, h, brand }) {
         ctx.beginPath(); ctx.arc(fx, hy, size * 0.36, 0, Math.PI * 2); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(fx - size * 0.17, hy); ctx.lineTo(fx + size * 0.17, hy); ctx.moveTo(fx, hy - size * 0.17); ctx.lineTo(fx, hy + size * 0.17); ctx.stroke();
         ctx.restore();
-        rows.push({ role: 'badge', text: x.name, size, opacity: +a.toFixed(3), x0, x1: fx + size * 0.4, y0: b.y0, y1: b.y1 });
+        return [{ role: 'badge', text: name, size, opacity: +a.toFixed(3), x0, x1: fx + size * 0.4, y0: b.y0, y1: b.y1 }];
       }
     }
-    return rows;
   }
   return { draw };
 }

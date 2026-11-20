@@ -12,6 +12,8 @@ const SCENES = {
   yalda: () => import('./scenes/yalda.mjs'),
   'night-drive': () => import('./scenes/night-drive.mjs'),
   focus: () => import('./scenes/focus.mjs'),
+  'geo-kahkeshan': () => import('./scenes/geo.mjs'),
+  'geo-bazaar': () => import('./scenes/geo.mjs'),
 };
 let S = null;
 
