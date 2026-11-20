@@ -144,19 +144,24 @@ export function build({ plan }) {
   mirror.position.set(0.02, 1.58, -0.36);
   mirror.rotation.y = -0.32;
   // the frame of the windscreen: two pillars and the roof's edge, the windscreen's faint glass
-  const trim = new THREE.MeshStandardMaterial({ color: '#0e0e12', roughness: 0.8 });
-  const pillarL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.75, 0.08), trim);
-  pillarL.position.set(-0.78, 1.3, -0.68); pillarL.rotation.x = -0.75;
-  const pillarR = pillarL.clone(); pillarR.position.x = 0.78;
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.04, 0.9), new THREE.MeshStandardMaterial({ color: '#1c1b20', roughness: 0.95 }));
-  roof.position.set(0, 1.62, 0.0);
+  // slim rounded pillars and a soft headliner, dark, so they frame the glass without looking like planks
+  const trim = new THREE.MeshStandardMaterial({ color: '#0b0b0e', roughness: 0.7 });
+  const pillarL = new THREE.Mesh(new THREE.CapsuleGeometry(0.028, 0.72, 6, 16), trim);
+  pillarL.position.set(-0.8, 1.3, -0.66); pillarL.rotation.x = -0.75; pillarL.rotation.z = 0.12;
+  const pillarR = pillarL.clone(); pillarR.position.x = 0.8; pillarR.rotation.z = -0.12;
+  const roof = new THREE.Mesh(new THREE.CapsuleGeometry(0.03, 1.5, 6, 16), trim);
+  roof.rotation.z = Math.PI / 2;
+  roof.position.set(0, 1.6, -0.4);
+  // a fine chrome line along the dashboard's edge
+  const edge = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.004, 0.004), new THREE.MeshStandardMaterial({ color: '#cfd3da', metalness: 1, roughness: 0.2 }));
+  edge.position.set(0, 0.995, -0.058);
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.56, 0.66), new THREE.MeshPhysicalMaterial({ color: '#9fb0cc', transparent: true, opacity: 0.05, roughness: 0.05, metalness: 0, clearcoat: 1, depthWrite: false }));
   screen.position.set(0, 1.3, -0.69); screen.rotation.x = -0.75;
-  car.add(dash, cluster, wheel, mirror, pillarL, pillarR, roof, screen);
+  car.add(dash, cluster, wheel, mirror, pillarL, pillarR, roof, screen, edge);
   const [speedo, tacho] = cluster.userData.gauges;
 
   // ---- light ----
-  const lampLight = [new THREE.PointLight('#ff9e48', 0, 260, 1.4), new THREE.PointLight('#ff9e48', 0, 260, 1.4)];
+  const lampLight = [new THREE.PointLight('#ffb878', 0, 260, 1.4), new THREE.PointLight('#ffb878', 0, 260, 1.4)];
   for (const l of lampLight) scene.add(l);
   const signalLight = new THREE.PointLight('#ff2a1a', 0, 400, 1.2);
   scene.add(signalLight);
@@ -188,31 +193,20 @@ export function build({ plan }) {
   const sBoth = joinSpheres(sCluster, sMirror);
   const aspect = plan.w / plan.h;
   const F = (sp, az, el, k, heroes, shift) => ({ ...fitPose(sp, { az, el, k, fov, aspect, shift }), heroes });
+  // the shots: the gauges through the wheel, the charm close, the charm from below against the lit windscreen, the wheel
+  // and gauges from the left
+  const gauges = (u, az0, az1) => F(sCluster, lerp(az0, az1, u), lerp(0.1, 0.06, u), lerp(1.3, 1.2, u), [cluster]);
+  const charm = (u, az0, az1) => F(sMirror, lerp(az0, az1, u), lerp(0.02, -0.03, u), lerp(1.35, 1.22, u), [mirror]);
+  const below = (u) => F(sMirror, lerp(0.25, 0.1, u), lerp(-0.42, -0.36, u), lerp(2.3, 2.1, u), [mirror]);
+  const side = (u) => F(sCluster, lerp(-0.55, -0.42, u), lerp(0.2, 0.16, u), lerp(1.55, 1.45, u), [cluster]);
   const bank = {
-    intro: [
-      (u) => F(sCluster, lerp(0.05, -0.04, u), lerp(0.32, 0.28, u), lerp(wide ? 2.6 : 2.2, wide ? 2.3 : 2.0, u), [cluster], [0.4, 0.9, 0]),
-      (u) => F(sMirror, lerp(0.55, 0.4, u), lerp(-0.05, 0.02, u), lerp(1.5, 1.35, u), [mirror]),
-    ],
-    drop: [
-      (u) => F(sCluster, lerp(-0.08, 0.06, u), 0.3, lerp(wide ? 2.4 : 2.1, wide ? 2.2 : 1.9, u), [cluster], [0.4, 0.8, 0]),
-      (u) => F(sMirror, lerp(0.75, 0.55, u), lerp(0.05, -0.04, u), lerp(1.35, 1.25, u), [mirror]),
-      (u) => F(sCluster, lerp(0.3, 0.18, u), lerp(0.12, 0.08, u), lerp(1.35, 1.25, u), [cluster]),
-      (u) => F(sBoth, lerp(0.75, 0.62, u), lerp(0.18, 0.12, u), lerp(1.25, 1.18, u), [cluster, mirror]),
-    ],
-    break: [
-      (u) => F(sCluster, lerp(0.02, -0.02, u), 0.34, lerp(wide ? 2.6 : 2.3, wide ? 2.45 : 2.15, u), [cluster], [0.5, 1.0, 0]),
-      (u) => F(sMirror, lerp(0.35, 0.28, u), lerp(-0.08, -0.04, u), lerp(1.4, 1.3, u), [mirror]),
-    ],
-    drop2: [
-      (u) => F(sMirror, lerp(0.7, 0.5, u), lerp(0.02, -0.04, u), lerp(1.3, 1.22, u), [mirror]),
-      (u) => F(sCluster, lerp(-0.06, 0.06, u), 0.3, lerp(wide ? 2.4 : 2.1, wide ? 2.2 : 1.9, u), [cluster], [0.4, 0.8, 0]),
-      (u) => F(sCluster, lerp(-0.3, -0.18, u), lerp(0.1, 0.06, u), lerp(1.35, 1.25, u), [cluster]),
-      (u) => F(sBoth, lerp(0.7, 0.58, u), lerp(0.16, 0.1, u), lerp(1.25, 1.18, u), [cluster, mirror]),
-    ],
-    outro: [
-      (u) => F(sCluster, lerp(0.0, 0.08, u), lerp(0.3, 0.4, u), lerp(wide ? 2.4 : 2.1, wide ? 3.2 : 2.8, ease.inOut(u)), [cluster], [0.4, 0.9, 0]),
-    ],
+    intro: [(u) => gauges(u, 0.1, -0.02), (u) => below(u)],
+    drop: [(u) => gauges(u, 0.25, 0.12), (u) => charm(u, 0.7, 0.5), (u) => side(u), (u) => below(u)],
+    break: [(u) => charm(u, 0.35, 0.25), (u) => below(u)],
+    drop2: [(u) => charm(u, 0.7, 0.5), (u) => gauges(u, -0.25, -0.12), (u) => below(u), (u) => side(u)],
+    outro: [(u) => gauges(u, 0.0, 0.1)],
   };
+  void sBoth;
   const shots = directShots({ plan, sections, bank, every: { intro: 8, drop: wide ? 8 : 4, break: 8, drop2: wide ? 8 : 4, outro: 16 } });
   const camera = new THREE.PerspectiveCamera(fov, plan.w / plan.h, 0.05, 6000);
   const heroes = [cluster];
