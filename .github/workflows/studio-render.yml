@@ -9,7 +9,7 @@ on:
         default: 'studio/concepts/kavir-e-shab.json studio/concepts/baran.json studio/concepts/lenj-e-ghoroob.json'
   push:
     branches: ['feat/studio-*']
-    paths: ['studio/**', '.github/workflows/studio.yml']
+    paths: ['studio/**', '.github/workflows/studio-render.yml']
 concurrency: { group: studio-render, cancel-in-progress: true }
 jobs:
   render:
