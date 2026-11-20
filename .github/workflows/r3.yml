@@ -6,6 +6,8 @@ name: Render r3 Shorts
 # this run: the app reads the artifact (the silent picture, its cover frame, its report), puts the track under it on
 # its server and checks the loudness there. The panel finds its run by this title, so the title names the track.
 # A pull request renders only the cheap look (turntables and key frames, from the test jobs r3/jobs/*.json).
+# A long video (what = r3-long: 16:9, the whole track) is drawn in parts of about 20 seconds, one runner each
+# (matrix), then join.mjs puts the parts together and gates the whole: still one run per video.
 # Nothing is posted or scheduled. Artifacts are kept 3 days.
 run-name: ${{ github.event_name == 'workflow_dispatch' && format('Render {0} {1}', inputs.what, inputs.tracks) || github.event.pull_request.title }}
 on:
@@ -13,7 +15,7 @@ on:
     paths: ['r3/**', '.github/workflows/r3.yml']
   workflow_dispatch:
     inputs:
-      what: { description: 'r3 (one full Short from the job) or r3-stills (turntables and key frames of the test jobs)', required: true, default: 'r3-stills' }
+      what: { description: 'r3 (one full Short from the job), r3-long (one long video from the job) or r3-stills (turntables and key frames of the test jobs)', required: true, default: 'r3-stills' }
       tracks: { description: 'r3: the track, as a JSON list of one (names the run)', required: false, default: '[]' }
       job: { description: 'r3: the job from the Setavaz app (gzip, then base64). Numbers only, no sound.', required: false, default: '' }
 permissions:
@@ -25,7 +27,7 @@ jobs:
   stills:
     if: github.event_name == 'pull_request' || inputs.what == 'r3-stills'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     defaults: { run: { working-directory: r3 } }
     steps:
       - uses: actions/checkout@v4
@@ -73,3 +75,66 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with: { name: 'r3-${{ steps.job.outputs.track }}', path: r3/out/, retention-days: 3 }
+  long-plan:
+    if: github.event_name == 'workflow_dispatch' && inputs.what == 'r3-long'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults: { run: { working-directory: r3 } }
+    outputs:
+      track: ${{ steps.job.outputs.track }}
+      parts: ${{ steps.job.outputs.parts }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: The job and its parts
+        id: job
+        run: |
+          jq -r '.inputs.job // ""' "$GITHUB_EVENT_PATH" > job.b64
+          test -s job.b64 || { echo "no job"; exit 1; }
+          TRACK=$(base64 -d job.b64 | gunzip | jq -r '.trackId')
+          echo "$TRACK" | grep -Eq '^[a-z0-9-]{1,60}$' || { echo "the job names no track"; exit 1; }
+          jq -r '.inputs.tracks // ""' "$GITHUB_EVENT_PATH" | grep -Fq "\"$TRACK\"" || { echo "the job is for $TRACK, the title names another track"; exit 1; }
+          PARTS=$(node -e "import('./plan.mjs').then(m => { const p = m.makeR3Plan({ job: m.readJob('job.b64') }); if (p.format !== 'long') throw new Error('not a long video'); console.log(JSON.stringify([...Array(m.partsOf(p)).keys()])); })")
+          echo "track=$TRACK" >> "$GITHUB_OUTPUT"
+          echo "parts=$PARTS" >> "$GITHUB_OUTPUT"
+          echo "long video $TRACK in parts $PARTS"
+  long-part:
+    needs: long-plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: true
+      matrix:
+        part: ${{ fromJson(needs.long-plan.outputs.parts) }}
+    defaults: { run: { working-directory: r3 } }
+    steps:
+      - uses: actions/checkout@v4
+      - run: jq -r '.inputs.job // ""' "$GITHUB_EVENT_PATH" > job.b64
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null && ffmpeg -version | head -1 && google-chrome --version
+      - run: npm ci --no-audit --no-fund
+      - name: Render part ${{ matrix.part }} (silent)
+        run: node render.mjs --job job.b64 --part ${{ matrix.part }} --out out
+      - uses: actions/upload-artifact@v4
+        with: { name: 'part-${{ matrix.part }}', path: r3/out/, retention-days: 1 }
+  long-join:
+    needs: [long-plan, long-part]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults: { run: { working-directory: r3 } }
+    steps:
+      - uses: actions/checkout@v4
+      - run: jq -r '.inputs.job // ""' "$GITHUB_EVENT_PATH" > job.b64
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null && ffmpeg -version | head -1
+      - uses: actions/download-artifact@v4
+        with: { pattern: 'part-*', path: r3/parts }
+      - name: Join the parts and gate the whole
+        run: node join.mjs --job job.b64 --in parts --out out
+      - name: Keep the files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: 'r3-${{ needs.long-plan.outputs.track }}', path: r3/out/, retention-days: 3 }

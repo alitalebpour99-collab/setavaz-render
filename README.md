@@ -14,8 +14,8 @@ Fonts: EB Garamond, Inter Display and Vazirmatn (SIL Open Font License 1.1). Log
 
 ## Round-3 Shorts (`r3/`)
 
-One lit 3D world per track (three.js in a headless Chrome, `r3/page/`, objects in `r3/library/`), 9:16, English
-only, gated before anything reaches the owner (`r3/gate.mjs`). Moved here from the app's private repo on 19 Nov 2026
+One lit 3D world per track (three.js in a headless Chrome, `r3/page/`, objects in `r3/library/`), 9:16 Shorts and 16:9
+long videos, English only, gated before anything reaches the owner (`r3/gate.mjs`). Moved here from the app's private repo on 19 Nov 2026
 so every render runs on free minutes.
 
 - **How it starts:** the Setavaz panel («کارها» › ساخت ویدیو) dispatches `.github/workflows/r3.yml` with `what = r3`,
@@ -33,5 +33,14 @@ so every render runs on free minutes.
 - **Pull requests** touching `r3/` render the cheap look (the turntable of every library object and the key frames of
   each test job in `r3/jobs/`) and run `npm test`. The test jobs come from the app's `scripts/r3-jobs.ts` (the
   catalogue's beat grid instead of the measured sound); make them again when the catalogue or a world changes.
+- **Long videos** (`what = r3-long`, 20 Nov 2026): the same worlds at 16:9 over the whole track. The job's `conf.format` is
+  `long` with `lengthS`; the run splits the frames into parts of about 20 seconds (`plan.mjs partsOf`), draws each part
+  on its own runner (`render.mjs --part k`, a matrix) and `join.mjs` puts them together without encoding again, then gates
+  the whole (16:9 title-safe frame, words on at most 15% of the frames, the badge once after the first drop, bottom left).
+  Still one run per video; the artifact is `r3-<video>` as for a Short.
+- **Worlds that know their track** (Yalda, Night Drive, Focus): `conf.marks` gives the sections' starts in the track's own
+  seconds (measured once from the master); the scene is a function of the track's time, so a Short and the long video
+  show the same moment the same way, and `kit.mjs directShots` cuts each section on its downbeats. `kit.mjs fitPose`
+  frames an object's bounding sphere for either shape of video.
 - Locally: `cd r3 && npm ci && npm test`; a render needs Chrome and ffmpeg (`node render.mjs --job jobs/last-ember.json
   --stills`), so it belongs on the runners.

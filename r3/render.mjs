@@ -2,6 +2,8 @@
 //   node render.mjs --job job.json [--out out] [--scale 0.75]     the full Short, SILENT, gated
 //   node render.mjs --job job.json --stills [--out out]           the key frames only (look at these first)
 //   node render.mjs --turntables [--out out]                      every library object from eight sides
+//   node render.mjs --job job.json --part k [--out out]           part k of a long video (frames and their checks only);
+//                                                                 join.mjs puts the parts together and gates the whole
 // Runs on GitHub Actions only (.github/workflows/r3.yml, this public repo: free minutes). The job (plan.mjs readJob)
 // holds the track's sound as numbers only; the track itself never comes here. The Setavaz app puts the sound under
 // the picture on its own server and checks the loudness there. Nothing here posts, schedules or uploads.
@@ -11,7 +13,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
-import { FPS, makeR3Plan, readJob } from './plan.mjs';
+import { FPS, makeR3Plan, partRange, partsOf, readJob } from './plan.mjs';
 import { reason, verdict } from './gate.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -100,16 +102,23 @@ if (has('stills')) {
   await finish(pageErrors.length ? 1 : 0);
 }
 
-// ── the full Short ──
+// ── the full Short, or one part of a long video ──
 const started = Date.now();
-const mp4 = path.join(outDir, `${id}.mp4`);
+const partArg = arg('part', null);
+const part = partArg === null ? null : Number(partArg);
+const n = partsOf(plan);
+if (part !== null && !(Number.isInteger(part) && part >= 0 && part < n)) throw new Error(`part ${partArg} (this video has ${n})`);
+const range = part === null ? { from: 0, to: plan.frames } : partRange(plan, part, n);
+const mp4 = path.join(outDir, part === null ? `${id}.mp4` : `${id}.part-${String(part).padStart(2, '0')}.mp4`);
 const colour = ['-vf', 'scale=in_color_matrix=bt601:in_range=full:out_color_matrix=bt709:out_range=tv,format=yuv420p,noise=c0s=5:c0f=t+u', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
+const rate = plan.format === 'long' ? ['-maxrate', '9M', '-bufsize', '18M'] : ['-maxrate', '7M', '-bufsize', '14M'];
 const enc = spawn('ffmpeg', ['-hide_banner', '-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-', '-an',
-  '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-maxrate', '7M', '-bufsize', '14M', ...colour, '-r', String(FPS),
-  '-t', plan.L.toFixed(3), '-movflags', '+faststart', mp4], { stdio: ['pipe', 'inherit', 'inherit'] });
+  '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', ...rate, ...colour, '-r', String(FPS), '-g', String(2 * FPS),
+  '-frames:v', String(range.to - range.from), '-movflags', '+faststart', mp4], { stdio: ['pipe', 'inherit', 'inherit'] });
 const done = new Promise((res, rej) => enc.on('close', (c) => (c === 0 ? res() : rej(new Error(`ffmpeg exited ${c}`)))));
 const frames = [];
-for (let f = 0; f < plan.frames; f++) {
+if (part !== null) console.log(`part ${part + 1} of ${n}: frames ${range.from} to ${range.to - 1}`);
+for (let f = range.from; f < range.to; f++) {
   const r = await page.evaluate((x, b) => window.r3.frame(x, { box: b }), f / FPS, f % 3 === 0 || f === plan.frames - 1);
   frames.push({ f, luma: r.luma, rows: r.rows, box: r.box });
   if (!enc.stdin.write(jpegOf(r.jpeg))) await new Promise((res) => enc.stdin.once('drain', res));
@@ -120,6 +129,12 @@ enc.stdin.end();
 await done;
 
 const renderS = (Date.now() - started) / 1000;
+if (part !== null) {
+  // a part: its frames' checks for join.mjs, which gates the whole video
+  fs.writeFileSync(mp4.replace(/.mp4$/, '.frames.json'), JSON.stringify({ id, part, parts: n, ...range, seconds: +renderS.toFixed(1), size: `${info.rw}x${info.rh}`, gpu: info.gpu, cuts: info.cuts, frames }));
+  console.log(`${id} part ${part}: ${range.to - range.from} frames in ${renderS.toFixed(0)} s`);
+  await finish(0);
+}
 
 // for the owner's look (never uploaded anywhere): a contact sheet, a frame-by-frame sheet, a cover frame
 ff(['-i', mp4, '-vf', 'fps=1/2,scale=216:-2,tile=7x2:padding=6:color=0x0C0930', '-frames:v', '1', '-q:v', '3', path.join(outDir, `${id}-sheet.jpg`)]);

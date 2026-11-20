@@ -158,3 +158,90 @@ export function screenBox(objects, camera) {
   }
   return { x0: +x0.toFixed(4), y0: +y0.toFixed(4), x1: +x1.toFixed(4), y1: +y1.toFixed(4), behind };
 }
+
+/**
+ * The shots of a world that knows its track's sections (in the TRACK's time): each section is cut every `every[type]`
+ * bars from its own start (so a cut lands on a downbeat, and the same moment is framed the same way in a Short and in
+ * the long video), and each piece takes the next pose of its type from `bank` (bank[type] or bank.default: functions
+ * (u, T) -> { pos, look, fov, heroes }, u 0..1 through the piece, T the track's time). Pieces shorter than `minS`
+ * seconds join their neighbour. Returns { shots, shotAt, apply(camera, t, wobble) -> pose } in the window's time.
+ */
+export function directShots({ plan, sections, bank, every = {}, minS = 1.8 }) {
+  const { a0, L, bar } = plan;
+  const pieces = [];
+  const count = {};
+  for (const s of sections) {
+    const step = (every[s.type] ?? 8) * bar;
+    for (let c = s.from, k = 0; c < s.to - 1e-6; c += step, k++) {
+      const T0 = c, T1 = Math.min(c + step, s.to);
+      const from = Math.max(T0, a0), to = Math.min(T1, a0 + L);
+      if (to - from <= 1e-6) continue;
+      const list = bank[s.type] ?? bank.default;
+      const i = (count[s.type] = (count[s.type] ?? -1) + 1);
+      // the pose's index from the piece's place in its section, so it does not depend on the window
+      const pose = list[(k + (s.seed ?? 0)) % list.length];
+      pieces.push({ from: from - a0, to: to - a0, T0, T1, pose, type: s.type, i });
+    }
+  }
+  // a piece too short to read joins the one before it (the first joins the one after)
+  for (let j = 0; j < pieces.length; j++) {
+    const p = pieces[j];
+    if (p.to - p.from >= minS || pieces.length === 1) continue;
+    if (j > 0) { pieces[j - 1].to = p.to; pieces[j - 1].T1 = Math.max(pieces[j - 1].T1, p.T1); } else { pieces[1].from = p.from; pieces[1].T0 = Math.min(pieces[1].T0, p.T0); }
+    pieces.splice(j, 1);
+    j -= 1;
+  }
+  pieces[0].from = 0;
+  pieces[pieces.length - 1].to = L + 1;
+  const shots = pieces.map((p) => ({ from: p.from, to: p.to, type: p.type, pose: (t) => p.pose(seg(a0 + t, p.T0, p.T1), a0 + t) }));
+  const shotAt = (t) => shots.find((s) => t >= s.from && t < s.to) ?? shots[shots.length - 1];
+  const look = new THREE.Vector3();
+  return {
+    shots, shotAt,
+    apply(camera, t, wobble = [0, 0, 0]) {
+      const p = shotAt(t).pose(t);
+      camera.fov = p.fov ?? 34;
+      camera.up.set(0, 1, 0);
+      camera.position.set(p.pos[0] + wobble[0], p.pos[1] + wobble[1], p.pos[2] + wobble[2]);
+      look.set(p.look[0] + wobble[0] * 0.3, p.look[1] + wobble[1] * 0.3, p.look[2]);
+      camera.lookAt(look);
+      if (p.roll) camera.rotateZ(p.roll);
+      camera.updateProjectionMatrix();
+      camera.updateMatrixWorld(true);
+      return p;
+    },
+  };
+}
+
+/** The marks of a plan back in the track's time (cuesFromMarks keeps them in the window's time). */
+export const trackMarks = (plan) => Object.fromEntries(Object.entries(plan.cues.marks ?? {}).map(([k, t]) => [k, plan.a0 + t]));
+/** A camera's vertical field of view for the plan's shape: wider for the tall Short, narrower for the wide video. */
+export const fovFor = (plan, portrait = 34, landscape = 24) => (plan.format === 'long' ? landscape : portrait);
+
+/** The bounding sphere of some objects in world space (as they are now), grown by `pad` (a share of its radius). */
+export function sphereOf(objects, pad = 0.05) {
+  const box = new THREE.Box3();
+  for (const o of objects) { o.updateWorldMatrix(true, true); box.expandByObject(o, true); }
+  const sp = box.getBoundingSphere(new THREE.Sphere());
+  sp.radius *= 1 + pad;
+  return sp;
+}
+/** The union of spheres (for a thing that moves between two states). */
+export function joinSpheres(...list) {
+  const box = new THREE.Box3();
+  for (const s of list) box.union(new THREE.Box3().setFromCenterAndSize(s.center, new THREE.Vector3(2 * s.radius, 2 * s.radius, 2 * s.radius)));
+  return box.getBoundingSphere(new THREE.Sphere());
+}
+/**
+ * A pose that frames a sphere: the camera on an orbit (azimuth `az`, elevation `el`) at the distance where the sphere
+ * fills `1 / k` of the narrower side of the frame (k > 1 leaves room). `shift` moves the point looked at, in units of
+ * the sphere's radius.
+ */
+export function fitPose(sphere, { az = 0, el = 0.2, fov = 34, aspect = 9 / 16, k = 1.3, shift = [0, 0, 0] }) {
+  const v = (fov * Math.PI) / 180;
+  const h = 2 * Math.atan(Math.tan(v / 2) * aspect);
+  const half = Math.min(v, h) / 2;
+  const dist = (sphere.radius * k) / Math.sin(half);
+  const c = sphere.center, R = sphere.radius;
+  return orbit([c.x + shift[0] * R, c.y + shift[1] * R, c.z + shift[2] * R], dist, az, el, fov);
+}

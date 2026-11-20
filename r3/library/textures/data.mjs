@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { clamp, lerp, smooth, tile2 } from '../util/noise.mjs';
 
-function make(size, fn, { srgb = true, repeat = true } = {}) {
+export function make(size, fn, { srgb = true, repeat = true } = {}) {
   const data = new Uint8Array(size * size * 4);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -25,7 +25,7 @@ function make(size, fn, { srgb = true, repeat = true } = {}) {
   return t;
 }
 const cache = new Map();
-const once = (key, f) => { if (!cache.has(key)) cache.set(key, f()); return cache.get(key); };
+export const once = (key, f) => { if (!cache.has(key)) cache.set(key, f()); return cache.get(key); };
 const mix3 = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
 
 /** A soft round glow (alpha falls off like a light seen out of focus): sparks, droplets, bokeh lights. */

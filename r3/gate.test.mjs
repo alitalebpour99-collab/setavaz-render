@@ -6,8 +6,8 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import zlib from 'node:zlib';
-import { FPS, checkJob, makeR3Plan, readJob } from './plan.mjs';
-import { LIMITS, SAFE, verdict } from './gate.mjs';
+import { FPS, PART_FRAMES, checkJob, makeR3Plan, partRange, partsOf, readJob } from './plan.mjs';
+import { LIMITS, LIMITS_LONG, SAFE, SAFE_LONG, limitsOf, verdict } from './gate.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const TRACKS = fs.readdirSync(path.join(HERE, 'jobs')).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)).sort();
@@ -16,6 +16,7 @@ const never = jobOf('last-ember').never;
 const planOf = (trackId, { job = jobOf(trackId), ...extra } = {}) => makeR3Plan({ job, ...extra });
 /** What the page would report for a plan: the words by their times, a box well inside, a picture that is lit. */
 function fakeFrames(plan, change = () => {}) {
+  if (plan.format === 'long') return fakeLong(plan, change);
   const frames = [];
   for (let f = 0; f < plan.frames; f++) {
     const t = f / FPS;
@@ -30,6 +31,28 @@ function fakeFrames(plan, change = () => {}) {
         rows.push({ role: 'end-soon', text: x.soon, size: x.soonSize, opacity: o, x0: 340, x1: 620, y0: 700, y1: 730 });
       }
       if (x.role === 'badge') rows.push({ role: 'badge', text: x.name, size: x.size, opacity: o, x0: 66, x1: 300, y0: 1430, y1: 1465 });
+    }
+    frames.push({ f, luma: 0.2, rows, box: f % 3 === 0 ? { x0: 0.2, y0: 0.3, x1: 0.8, y1: 0.7, behind: false } : null });
+  }
+  change(frames);
+  return frames;
+}
+/** The same for a long video, laid out in its 16:9 frame. */
+function fakeLong(plan, change) {
+  const frames = [];
+  for (let f = 0; f < plan.frames; f++) {
+    const t = f / FPS;
+    const rows = [];
+    for (const x of plan.texts) {
+      const to = x.to ?? plan.L + 1;
+      if (t < x.from || t > to) continue;
+      const o = Math.min(1, (t - x.from) / 0.5, x.role === 'end' ? 1 : (to - t) / 0.5);
+      if (x.role === 'signature') rows.push({ role: 'signature', text: x.lines[0], size: x.size, opacity: o, x0: 840, x1: 1080, y0: 912, y1: 965 });
+      if (x.role === 'end') {
+        x.lines.forEach((line, i) => rows.push({ role: 'end-title', text: line, size: x.size, opacity: o, x0: 800, x1: 1120, y0: 420 + i * 90, y1: 500 + i * 90 }));
+        rows.push({ role: 'end-soon', text: x.soon, size: x.soonSize, opacity: o, x0: 860, x1: 1060, y0: 540, y1: 570 });
+      }
+      if (x.role === 'badge') rows.push({ role: 'badge', text: x.name, size: x.size, opacity: o, x0: 102, x1: 330, y0: 975, y1: 1008 });
     }
     frames.push({ f, luma: 0.2, rows, box: f % 3 === 0 ? { x0: 0.2, y0: 0.3, x1: 0.8, y1: 0.7, behind: false } : null });
   }
@@ -61,7 +84,7 @@ test('the three plans: a window inside the track, cues where the sound turns, fe
 });
 
 test('the test jobs are the three worlds, and a job carries no sound, file name or checksum', () => {
-  assert.deepEqual(TRACKS, ['copper-storm', 'last-ember', 'molten-midnight']);
+  assert.deepEqual(TRACKS, ['copper-storm', 'focus-long', 'focus-s1', 'last-ember', 'molten-midnight', 'night-drive-long', 'night-drive-s1', 'yalda-long', 'yalda-s1']);
   for (const t of TRACKS) {
     const raw = fs.readFileSync(path.join(HERE, 'jobs', `${t}.json`), 'utf8');
     assert.doesNotMatch(raw, /.(m4a|wav|mp3|flac|aac)|sha256|https?:/i, `${t}: numbers only`);
@@ -132,6 +155,52 @@ test('every scene builds without a browser and keeps its objects whole inside th
       assert.ok(!b.behind && b.x0 >= m && b.y0 >= m && b.x1 <= 1 - m && b.y1 <= 1 - m, `${trackId} at ${(f / FPS).toFixed(2)} s: ${JSON.stringify(b)}`);
     }
     const [ax, ay] = world.anchors.end();
-    assert.ok(ax > SAFE.left + 150 && ax < SAFE.right - 150 && ay > SAFE.top + 150 && ay < SAFE.bottom - 150, `${trackId}: the end card's place ${ax},${ay}`);
+    const safe = limitsOf(plan).safe;
+    assert.ok(ax > safe.left + 150 && ax < safe.right - 150 && ay > safe.top + 150 && ay < safe.bottom - 150, `${trackId}: the end card's place ${ax},${ay}`);
   }
+});
+
+test('the round-1119 worlds: Shorts and long videos from the marks of the track, cues in the window, words where they belong', () => {
+  for (const id of ['yalda-s1', 'night-drive-s1', 'focus-s1']) {
+    const p = planOf(id);
+    assert.equal(p.format, 'short');
+    assert.equal(p.w, 1080);
+    assert.ok(p.L >= LIMITS.minS && p.L <= LIMITS.maxS, `${id}: ${p.L} s`);
+    assert.ok(p.cues.dropT > 4 && p.cues.dropT < 7, `${id}: the drop at ${p.cues.dropT} s`);
+    assert.deepEqual(failed(verdict({ plan: p, frames: fakeFrames(p), file: { bytes: 9e6 }, never })), []);
+  }
+  for (const id of ['yalda-long', 'night-drive-long', 'focus-long']) {
+    const p = planOf(id);
+    assert.equal(p.format, 'long');
+    assert.deepEqual([p.w, p.h], [1920, 1080]);
+    assert.ok(p.L >= LIMITS_LONG.minS && p.L <= LIMITS_LONG.maxS);
+    assert.equal(p.a0, 0);
+    const badge = p.texts.find((x) => x.role === 'badge');
+    assert.ok(badge.from > p.cues.dropT && badge.to < p.L - 10, `${id}: the badge once, after the first drop`);
+    assert.equal(p.texts.find((x) => x.role === 'end').soon, 'Coming soon');
+    assert.deepEqual(failed(verdict({ plan: p, frames: fakeFrames(p), file: { bytes: 120e6 }, never })), []);
+    // the badge near the middle of the frame is refused
+    const mid = failed(verdict({ plan: p, frames: fakeFrames(p, (fr) => fr.forEach((x) => x.rows.forEach((r) => { if (r.role === 'badge') { r.y0 = 1030; r.y1 = 1070; } }))), never }));
+    assert.deepEqual(mid, ['safe']);
+  }
+  assert.throws(() => checkJob({ ...jobOf('yalda-long'), conf: { ...jobOf('yalda-long').conf, format: 'square' } }), /format/);
+  assert.throws(() => checkJob({ ...jobOf('yalda-long'), conf: { ...jobOf('yalda-long').conf, lengthS: undefined } }), /length/);
+  assert.equal(SAFE_LONG.right > SAFE.right, true);
+});
+
+test('a long video is drawn in parts that cover every frame once, in order', () => {
+  for (const id of ['yalda-long', 'night-drive-long', 'focus-long']) {
+    const p = planOf(id);
+    const n = partsOf(p);
+    assert.ok(n >= 2 && n <= 20, `${id}: ${n} parts`);
+    let next = 0;
+    for (let k = 0; k < n; k++) {
+      const r = partRange(p, k, n);
+      assert.equal(r.from, next);
+      assert.ok(r.to - r.from <= PART_FRAMES + 1);
+      next = r.to;
+    }
+    assert.equal(next, p.frames);
+  }
+  assert.equal(partsOf(planOf('last-ember')), 1);
 });

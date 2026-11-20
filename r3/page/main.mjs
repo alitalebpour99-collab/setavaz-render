@@ -9,6 +9,9 @@ const SCENES = {
   ember: () => import('./scenes/ember.mjs'),
   storm: () => import('./scenes/storm.mjs'),
   molten: () => import('./scenes/molten.mjs'),
+  yalda: () => import('./scenes/yalda.mjs'),
+  'night-drive': () => import('./scenes/night-drive.mjs'),
+  focus: () => import('./scenes/focus.mjs'),
 };
 let S = null;
 
