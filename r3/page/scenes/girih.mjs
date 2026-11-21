@@ -115,7 +115,7 @@ export const PRESETS = {
   'girih-mehr': { photo: 'mehr', geom: sunRosette, fold: 12, w: { c: [0.5, 0.42], r: 0.34 }, v: { c: [0.5, 0.33], r: 0.36 }, rise: 0.08, sun: true, shoot: true,
     lanterns: { w: [[0.16, 0.655], [0.195, 0.662], [0.23, 0.668], [0.265, 0.672], [0.3, 0.676]], v: [[0.1, 0.556], [0.15, 0.561], [0.2, 0.566], [0.25, 0.57], [0.3, 0.574]] } },
   'girih-si-o-se-pol': { photo: 'si-o-se-pol', geom: arcade, fold: 11, w: { c: [0.5, 0.285], r: 0.262, water: 0.66, mirror: 0.46 }, v: { c: [0.5, 0.27], r: 0.4, water: 0.595 }, shoot: true },
-  'girih-jangal': { photo: 'jangal', geom: leaves, fold: 10, w: { c: [0.5, 0.45], r: 0.38 }, v: { c: [0.5, 0.4], r: 0.42 }, grow: true, flies: 56, shoot: true, backing: 0.62 },
+  'girih-jangal': { photo: 'jangal', geom: leaves, fold: 10, w: { c: [0.5, 0.45], r: 0.38 }, v: { c: [0.5, 0.4], r: 0.42 }, grow: true, flies: 56, shoot: true, backing: 0.72 },
   'girih-lenj': { photo: 'lenj', geom: compass, fold: 16, w: { c: [0.5, 0.29], r: 0.2, water: 0.567, mirror: 0.46, reflA: 0.22 }, v: { c: [0.5, 0.31], r: 0.35, water: 0.598, mirror: 0.46, reflA: 0.22 }, sway: 0.06, shoot: true,
     lamp: { w: [0.546, 0.566], v: [0.817, 0.583] } },
 };
@@ -300,8 +300,8 @@ export async function build({ plan }) {
     }
     // a soft dark disc behind the rosette where the photograph is bright behind it (Jangal's canopy gap)
     if (P.backing) {
-      const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.25);
-      bg.addColorStop(0, `rgba(3,8,7,${P.backing.toFixed(2)})`); bg.addColorStop(0.6, `rgba(3,8,7,${(P.backing * 0.75).toFixed(2)})`); bg.addColorStop(1, 'rgba(3,8,7,0)');
+      const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.35);
+      bg.addColorStop(0, `rgba(3,8,7,${P.backing.toFixed(2)})`); bg.addColorStop(0.72, `rgba(3,8,7,${(P.backing * 0.85).toFixed(2)})`); bg.addColorStop(1, 'rgba(3,8,7,0)');
       ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
     }
     // the sun's glow behind the rosette (Mehr): it warms with the bloom and the kick (kept low: the photograph's own
@@ -445,9 +445,11 @@ export async function build({ plan }) {
     // 8. the beat in the light: a LOCAL bloom round the girih (never a full-frame wash: that greyed the whole picture as
     // a drop landed): faint on each kick, stronger as a drop lands; brightest on the girih's body, not on its heart
     // (Mehr's heart sits on the sunrise and would burn out)
-    const wash = 0.05 * st.kick + 0.05 * ringA + 0.2 * st.flash;
+    // (the gate wants the drop to read: the picture's light must rise ×1.25 as it lands; with the full-frame wash gone
+    // the small Lenj compass only reached ×1.14, so the bloom reaches past the girih, never to the frame's corners)
+    const wash = 0.05 * st.kick + 0.05 * ringA + 0.3 * st.flash;
     if (wash > 0.004) {
-      const wg = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * sc * 1.45);
+      const wg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(R * sc * 1.6, 0.48 * Math.min(W, H)));
       wg.addColorStop(0, `rgba(255,200,140,${clamp(wash * 0.3).toFixed(3)})`); wg.addColorStop(0.55, `rgba(255,200,140,${clamp(wash).toFixed(3)})`); wg.addColorStop(1, 'rgba(255,200,140,0)');
       ctx.fillStyle = wg; ctx.fillRect(0, 0, W, H);
     }
