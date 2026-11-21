@@ -103,7 +103,7 @@ function compass(open = 0) {
 // centre and radius are fractions of the frame: [x, y] of (W, H); r of min(W, H). `water` = the reflection's line.
 export const PRESETS = {
   'girih-mehr': { photo: 'mehr', geom: sunRosette, fold: 12, w: { c: [0.5, 0.42], r: 0.34 }, v: { c: [0.5, 0.33], r: 0.36 }, rise: 0.08, sun: true, shoot: true },
-  'girih-si-o-se-pol': { photo: 'si-o-se-pol', geom: arcade, fold: 33, w: { c: [0.5, 0.31], r: 0.25, water: 0.66 }, v: { c: [0.5, 0.27], r: 0.4, water: 0.6 }, shoot: true },
+  'girih-si-o-se-pol': { photo: 'si-o-se-pol', geom: arcade, fold: 11, w: { c: [0.5, 0.31], r: 0.25, water: 0.66 }, v: { c: [0.5, 0.27], r: 0.4, water: 0.6 }, shoot: true },
   'girih-jangal': { photo: 'jangal', geom: leaves, fold: 10, w: { c: [0.5, 0.45], r: 0.38 }, v: { c: [0.5, 0.4], r: 0.42 }, grow: true, flies: 56, shoot: true },
   'girih-lenj': { photo: 'lenj', geom: compass, fold: 16, w: { c: [0.5, 0.29], r: 0.25 }, v: { c: [0.5, 0.33], r: 0.35 }, sway: 0.06, shoot: true },
 };
@@ -264,10 +264,11 @@ export async function build({ plan }) {
       sg.addColorStop(0, `rgba(255,190,110,${a.toFixed(3)})`); sg.addColorStop(0.45, `rgba(255,140,70,${(a * 0.35).toFixed(3)})`); sg.addColorStop(1, 'rgba(255,120,60,0)');
       ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
     }
-    // 2. the girih: turning one symmetry step a period (Lenj sways besides), breathing with the bass, opening on drops
+    // 2. the girih: turning one TRUE symmetry step a period (Si-o-se-pol's star is 11-fold; the compass only sways, its
+    // long cardinal points make it 4-fold), breathing with the bass, opening on drops, breathing with the bass, opening on drops
     const geom = P.geom(st.bloom);
     let rot = (TAU / P.fold) * p;
-    if (P.sway) rot = (TAU / P.fold) * p + P.sway * Math.sin(TAU * Math.round(period / (2 * bar)) * p);
+    if (P.sway) rot = P.sway * Math.sin(TAU * Math.round(period / (2 * bar)) * p);
     const sc = (0.94 + 0.07 * st.bloom + 0.03 * st.flash) * (1 + 0.018 * st.bass);
     const lineA = clamp(0.45 + 0.35 * st.bloom + 0.15 * st.mel + 0.25 * st.flash);
     const k = W / 1920 * (H > W ? 1.25 : 1);
