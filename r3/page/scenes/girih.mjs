@@ -267,7 +267,7 @@ export async function build({ plan }) {
     // 2. the girih: turning one symmetry step a period (Lenj sways besides), breathing with the bass, opening on drops
     const geom = P.geom(st.bloom);
     let rot = (TAU / P.fold) * p;
-    if (P.sway) rot = 0.4 * (TAU / P.fold) * p + P.sway * Math.sin(TAU * Math.round(period / (2 * bar)) * p);
+    if (P.sway) rot = (TAU / P.fold) * p + P.sway * Math.sin(TAU * Math.round(period / (2 * bar)) * p);
     const sc = (0.94 + 0.07 * st.bloom + 0.03 * st.flash) * (1 + 0.018 * st.bass);
     const lineA = clamp(0.45 + 0.35 * st.bloom + 0.15 * st.mel + 0.25 * st.flash);
     const k = W / 1920 * (H > W ? 1.25 : 1);
