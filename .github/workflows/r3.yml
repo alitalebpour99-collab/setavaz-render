@@ -15,7 +15,7 @@ on:
     paths: ['r3/**', '.github/workflows/r3.yml']
   workflow_dispatch:
     inputs:
-      what: { description: 'r3 (one full Short from the job), r3-long (one long video from the job) or r3-stills (turntables and key frames of the test jobs)', required: true, default: 'r3-stills' }
+      what: { description: 'r3 (one full Short from the job), r3-long (one long video from the job), r3-stills (turntables and key frames of the test jobs), girih-stills or girih-render (round 1126, tracks = a JSON list of r3/jobs/girih/<name>)', required: true, default: 'r3-stills' }
       tracks: { description: 'r3: the track, as a JSON list of one (names the run)', required: false, default: '[]' }
       job: { description: 'r3: the job from the Setavaz app (gzip, then base64). Numbers only, no sound.', required: false, default: '' }
 permissions:
@@ -138,3 +138,88 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with: { name: 'r3-${{ needs.long-plan.outputs.track }}', path: r3/out/, retention-days: 3 }
+  # ── round 1126: the girih videos, MANY in one run (what = girih-stills | girih-render, tracks = a JSON list of
+  # r3/jobs/girih/<name>). Each job is numbers only (no sound). Shorts and loops one runner each; a long video in parts
+  # of about 20 s, then joined and gated. The picture is SILENT; the sound is put under it in a private repo. ──
+  g-plan:
+    if: github.event_name == 'workflow_dispatch' && startsWith(inputs.what, 'girih-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults: { run: { working-directory: r3 } }
+    outputs:
+      units: ${{ steps.p.outputs.units }}
+      longs: ${{ steps.p.outputs.longs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: The units of work
+        id: p
+        env: { WHAT: '${{ inputs.what }}', NAMES: '${{ inputs.tracks }}' }
+        run: |
+          node --input-type=module -e "
+          const m = await import('./plan.mjs');
+          const names = JSON.parse(process.env.NAMES), what = process.env.WHAT.replace('girih-', '');
+          if (!['stills', 'render'].includes(what)) throw new Error('what = stills or render');
+          const units = [], longs = [];
+          for (const name of names) {
+            if (!/^[a-z0-9-]{1,60}$/.test(name)) throw new Error('bad name ' + name);
+            const plan = m.makeR3Plan({ job: m.readJob('jobs/girih/' + name + '.json') });
+            if (what === 'render' && plan.format === 'long') { longs.push(name); for (let k = 0; k < m.partsOf(plan); k++) units.push({ name, part: k }); }
+            else units.push({ name, part: -1 });
+          }
+          const fs = await import('node:fs');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'units=' + JSON.stringify(units) + '\nlongs=' + JSON.stringify(longs) + '\n');
+          console.log(units.length, 'units;', longs.length, 'long videos');
+          "
+  g-unit:
+    needs: g-plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        include: ${{ fromJson(needs.g-plan.outputs.units) }}
+    defaults: { run: { working-directory: r3 } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null && ffmpeg -version | head -1 && google-chrome --version
+      - run: npm ci --no-audit --no-fund
+      - name: ${{ inputs.what }} ${{ matrix.name }} ${{ matrix.part }}
+        run: |
+          J=jobs/girih/${{ matrix.name }}.json
+          if [ "${{ inputs.what }}" = "girih-stills" ]; then node render.mjs --job "$J" --stills --out out
+          elif [ "${{ matrix.part }}" -ge 0 ]; then node render.mjs --job "$J" --part ${{ matrix.part }} --out out
+          else node render.mjs --job "$J" --out out; fi
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.what == 'girih-stills' && format('stills-{0}', matrix.name) || (matrix.part >= 0 && format('part-{0}-{1}', matrix.name, matrix.part) || format('r3-{0}', matrix.name)) }}
+          path: r3/out/
+          retention-days: ${{ matrix.part >= 0 && 1 || 3 }}
+  g-join:
+    needs: [g-plan, g-unit]
+    if: always() && inputs.what == 'girih-render' && needs.g-plan.outputs.longs != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        name: ${{ fromJson(needs.g-plan.outputs.longs) }}
+    defaults: { run: { working-directory: r3 } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null && ffmpeg -version | head -1
+      - uses: actions/download-artifact@v4
+        with: { pattern: 'part-${{ matrix.name }}-*', path: r3/parts }
+      - name: Join the parts and gate the whole
+        run: node join.mjs --job jobs/girih/${{ matrix.name }}.json --in parts --out out
+      - name: Keep the files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: 'r3-${{ matrix.name }}', path: r3/out/, retention-days: 3 }
