@@ -14,6 +14,10 @@ const SCENES = {
   focus: () => import('./scenes/focus.mjs'),
   'geo-kahkeshan': () => import('./scenes/geo.mjs'),
   'geo-bazaar': () => import('./scenes/geo.mjs'),
+  'girih-mehr': () => import('./scenes/girih.mjs'),
+  'girih-si-o-se-pol': () => import('./scenes/girih.mjs'),
+  'girih-jangal': () => import('./scenes/girih.mjs'),
+  'girih-lenj': () => import('./scenes/girih.mjs'),
 };
 let S = null;
 
@@ -29,7 +33,7 @@ window.r3 = {
     gl.width = rw; gl.height = rh;
     const mod = await SCENES[plan.scene]();
     const stage = makeStage({ canvas: gl, w: rw, h: rh, bloom: mod.look.bloom, exposure: mod.look.exposure });
-    const world = mod.build({ plan });
+    const world = await mod.build({ plan }); // a world may load its photograph first
     world.scene.environment = envFromPanels(stage.renderer, mod.env);
     const out = document.createElement('canvas');
     out.width = W; out.height = H;
@@ -50,10 +54,12 @@ window.r3 = {
     const now = world.update(t);
     stage.renderer.toneMappingExposure = now.exposure;
     stage.bloomPass.strength = now.bloom;
-    if (draw) stage.render(world.scene, world.camera);
+    if (draw && !world.draw2d) stage.render(world.scene, world.camera);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
-    if (draw) ctx.drawImage(gl, 0, 0, W, H);
+    // a 2D world (the girih over a photograph, 21 Nov 2026) draws itself at full size: crisp thin lines, no 3D pass
+    if (draw && world.draw2d) { world.draw2d(ctx, t, W, H); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; ctx.filter = 'none'; }
+    else if (draw) ctx.drawImage(gl, 0, 0, W, H);
     const rows = overlay.draw(ctx, plan, t, world.anchors, Math.round(t * plan.fps));
     pctx.drawImage(out, 0, 0, 27, 48);
     const d = pctx.getImageData(0, 0, 27, 48).data;
