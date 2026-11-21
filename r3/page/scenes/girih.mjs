@@ -32,11 +32,13 @@ function sunRosette(open = 0) {
   L.push({ pts: star(12, 5, 0.34), o: 0.3, layer: 'core' });
   for (let i = 0; i < 12; i++) {
     const a = -Math.PI / 2 + i * w;
-    const p = [pol(0.34, a - w / 2), pol(0.7, a - w * (0.3 + 0.04 * open)), pol(0.96 + 0.04 * open, a), pol(0.7, a + w * (0.3 + 0.04 * open)), pol(0.34, a + w / 2)];
+    // each petal is rooted in two neighbouring points of the heart star, so the rosette is one closed drawing
+    const m = a + w / 2;
+    const p = [pol(0.34, a), pol(0.68, m - w * (0.3 + 0.04 * open)), pol(0.96 + 0.04 * open, m), pol(0.68, m + w * (0.3 + 0.04 * open)), pol(0.34, a + w)];
     L.push({ pts: p, o: 0.7, layer: 'core' });
-    N.push({ p: pol(0.96 + 0.04 * open, a), o: 1.0, big: 1 }, { p: pol(0.7, a - w * (0.3 + 0.04 * open)), o: 0.7, big: 0.45 });
-    N.push({ p: pol(0.34, a), o: 0.34, big: 0.5 });
-    const ra = a + w / 2;
+    N.push({ p: pol(0.96 + 0.04 * open, m), o: 1.0, big: 1 }, { p: pol(0.68, m - w * (0.3 + 0.04 * open)), o: 0.68, big: 0.45 });
+    N.push({ p: pol(0.34, a), o: 0.34, big: 0.55 });
+    const ra = a;
     L.push({ pts: [pol(1.06, ra), pol(1.06 + 0.16 * (0.6 + 0.8 * open), ra)], o: 1.1, layer: 'rays' });
   }
   return { L, N };
@@ -44,19 +46,20 @@ function sunRosette(open = 0) {
 
 function arcade(open = 0) {
   // Si-o-se-pol: 33 pointed arches round a ring (the bridge's arcade), an 11-fold star {11/4} inside, two deck rings
-  const L = [], N = [], n = 33, w = TAU / n, d = w * 0.38;
-  const r0 = 0.62, r1 = 0.78, r2 = 0.9 + 0.03 * open;
-  L.push({ pts: circle(r0 - 0.03), o: r0, layer: 'core' }, { pts: circle(r2 + 0.05), o: 1.0, layer: 'outer' });
+  // an arcade: neighbouring arches share their pillars; each arch is pointed (two curves meeting at an angle)
+  const L = [], N = [], n = 33, w = TAU / n, d = w / 2;
+  const r0 = 0.66, r1 = 0.8, r2 = 0.9 + 0.03 * open;
+  L.push({ pts: circle(r0), o: r0, layer: 'core' }, { pts: circle(r2 + 0.04), o: 1.0, layer: 'outer' });
   for (let i = 0; i < n; i++) {
     const a = -Math.PI / 2 + i * w;
     const arch = [];
-    for (let s = 0; s <= 8; s++) { const u = s / 8; arch.push(pol(r1 + (r2 - r1) * Math.sqrt(1 - (1 - u) * (1 - u)) * u ** 0.15, a - d * (1 - u))); }
-    for (let s = 7; s >= 0; s--) { const u = s / 8; arch.push(pol(r1 + (r2 - r1) * Math.sqrt(1 - (1 - u) * (1 - u)) * u ** 0.15, a + d * (1 - u))); }
-    L.push({ pts: [pol(r0 - 0.03, a - d), ...arch, pol(r0 - 0.03, a + d)], o: 0.8, layer: 'core' });
-    N.push({ p: pol(r2, a), o: r2, big: i % 3 === 0 ? 1 : 0.55 });
+    for (let s = 0; s <= 8; s++) { const u = s / 8; arch.push(pol(r1 + (r2 - r1) * Math.sqrt(u), a - d * Math.cos((Math.PI / 2) * u))); }
+    for (let s = 7; s >= 0; s--) { const u = s / 8; arch.push(pol(r1 + (r2 - r1) * Math.sqrt(u), a + d * Math.cos((Math.PI / 2) * u))); }
+    L.push({ pts: [pol(r0, a - d), ...arch], o: 0.8, layer: 'core' });
+    N.push({ p: pol(r2, a), o: r2, big: i % 3 === 0 ? 1 : 0.5 });
   }
-  L.push({ pts: star(11, 4, 0.52), o: 0.45, layer: 'core' }, { pts: star(11, 3, 0.3 + 0.04 * open), o: 0.3, layer: 'outer' }, { pts: circle(0.14), o: 0.14, layer: 'core' });
-  for (let i = 0; i < 11; i++) N.push({ p: pol(0.52, -Math.PI / 2 + (i * TAU) / 11), o: 0.52, big: 0.8 });
+  L.push({ pts: star(11, 4, 0.5), o: 0.45, layer: 'core' }, { pts: circle(0.16 + 0.02 * open), o: 0.16, layer: 'outer' });
+  for (let i = 0; i < 11; i++) N.push({ p: pol(0.5, -Math.PI / 2 + (i * TAU) / 11), o: 0.52, big: 0.8 });
   return { L, N };
 }
 
@@ -74,8 +77,8 @@ function leaves(open = 0) {
   L.push({ pts: star(10, 3, 0.36), o: 0.3, layer: 'core' }, { pts: circle(0.2), o: 0.2, layer: 'core' });
   for (let i = 0; i < 10; i++) {
     const a = -Math.PI / 2 + i * w;
-    leaf(a, 0.2, 0.7, 0.1 + 0.03 * open, 0.5, 'core');
-    leaf(a + w / 2, 0.42, 1.02 + 0.05 * open, 0.12 + 0.05 * open, 0.85, 'outer');
+    leaf(a, 0.2, 0.68, 0.065 + 0.02 * open, 0.5, 'core');
+    leaf(a + w / 2, 0.46, 1.0 + 0.05 * open, 0.075 + 0.03 * open, 0.85, 'outer');
   }
   return { L, N };
 }
@@ -99,10 +102,10 @@ function compass(open = 0) {
 
 // centre and radius are fractions of the frame: [x, y] of (W, H); r of min(W, H). `water` = the reflection's line.
 export const PRESETS = {
-  'girih-mehr': { photo: 'mehr', geom: sunRosette, fold: 12, w: { c: [0.5, 0.42], r: 0.3 }, v: { c: [0.5, 0.33], r: 0.36 }, rise: 0.08, sun: true, shoot: true },
+  'girih-mehr': { photo: 'mehr', geom: sunRosette, fold: 12, w: { c: [0.5, 0.42], r: 0.34 }, v: { c: [0.5, 0.33], r: 0.36 }, rise: 0.08, sun: true, shoot: true },
   'girih-si-o-se-pol': { photo: 'si-o-se-pol', geom: arcade, fold: 33, w: { c: [0.5, 0.31], r: 0.25, water: 0.66 }, v: { c: [0.5, 0.27], r: 0.4, water: 0.6 }, shoot: true },
   'girih-jangal': { photo: 'jangal', geom: leaves, fold: 10, w: { c: [0.5, 0.45], r: 0.38 }, v: { c: [0.5, 0.4], r: 0.42 }, grow: true, flies: 56, shoot: true },
-  'girih-lenj': { photo: 'lenj', geom: compass, fold: 16, w: { c: [0.5, 0.29], r: 0.25 }, v: { c: [0.5, 0.34], r: 0.4 }, sway: 0.06, shoot: true },
+  'girih-lenj': { photo: 'lenj', geom: compass, fold: 16, w: { c: [0.5, 0.29], r: 0.25 }, v: { c: [0.5, 0.33], r: 0.35 }, sway: 0.06, shoot: true },
 };
 
 const loadImage = (src) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error(`no photograph ${src}`)); im.src = src; });
@@ -223,7 +226,7 @@ export async function build({ plan }) {
     const c = Math.cos(rot), s = Math.sin(rot);
     for (const l of geom.L) {
       const la = l.layer === 'core' ? 1 : l.layer === 'outer' ? 0.25 + 0.75 * S.bloom : 0.3 + 0.7 * S.bloom;
-      const vis = clamp((grow - l.o * 0.7) / 0.3);
+      const vis = clamp((grow * 1.3 - l.o * 0.7) / 0.3); // fully drawn at grow 1, even past the rim
       if (vis <= 0 || la * alpha <= 0.01) continue;
       g.globalAlpha = clamp(la * alpha * (l.vein ? 0.55 * vein : 1));
       g.beginPath();
@@ -275,12 +278,12 @@ export async function build({ plan }) {
     strokeGeom(gctx, geom, { cx: cx / 2, cy: cy / 2, R: R / 2, rot, sc, alpha: 0.32 * lineA * (0.7 + 0.5 * st.bloom), width: 2.0 * k, colour: 'rgb(255,176,80)', grow: st.grow });
     // the kick's ring: runs out from the heart to past the rim in 0.7 s
     const age = st.kh.age;
-    const ringA = age < 0.75 ? Math.pow(1 - age / 0.75, 1.6) * clamp(0.45 + st.kh.s) : 0;
-    const ringR = R * sc * (0.2 + 1.05 * ease(age / 0.75));
+    const ringA = age < 0.75 ? Math.pow(1 - age / 0.75, 1.6) * clamp(age / 0.06) * clamp(0.35 + 0.6 * st.kh.s) : 0;
+    const ringR = R * sc * (0.34 + 0.9 * ease(age / 0.75)); // born a third of the way out: no white blob at the heart
     if (ringA > 0.01) {
       gctx.globalAlpha = ringA;
       gctx.strokeStyle = 'rgb(255,214,150)';
-      gctx.lineWidth = 6 * k;
+      gctx.lineWidth = 4 * k;
       gctx.beginPath(); gctx.arc(cx / 2, cy / 2, ringR / 2, 0, TAU); gctx.stroke();
       gctx.globalAlpha = 1;
     }
@@ -308,7 +311,7 @@ export async function build({ plan }) {
     const nodes = [];
     for (let i = 0; i < geom.N.length; i++) {
       const n = geom.N[i];
-      if (clamp((st.grow - n.o * 0.7) / 0.3) < 0.6) continue;
+      if (clamp((st.grow * 1.3 - n.o * 0.7) / 0.3) < 0.6) continue;
       const [x, y] = n.p;
       const X = cx + (x * c - y * s) * R * sc, Y = cy + (x * s + y * c) * R * sc;
       const pass = ringA > 0 ? Math.exp(-Math.pow((Math.hypot(X - cx, Y - cy) - ringR) / (0.09 * R), 2)) * ringA : 0;
@@ -358,8 +361,8 @@ export async function build({ plan }) {
       const x = (f.x + f.ax * Math.sin(TAU * (f.k * p + f.ph))) * W;
       const y = (f.y + f.ay * Math.sin(TAU * (f.k * 2 * p + f.ph * 1.7))) * H;
       const fl = 0.5 + 0.5 * Math.sin(TAU * (f.fl * p + f.ph));
-      const a = clamp(0.15 + 0.6 * fl * (0.5 + 0.5 * st.energy) + 0.5 * st.kick * (i % 2));
-      const size = (14 + 10 * fl) * k;
+      const a = clamp(0.3 + 0.7 * fl * (0.5 + 0.5 * st.energy) + 0.5 * st.kick * (i % 2));
+      const size = (26 + 22 * fl) * k;
       ctx.globalAlpha = a;
       ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size);
     }
