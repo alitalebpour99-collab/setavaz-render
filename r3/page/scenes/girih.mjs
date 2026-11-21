@@ -4,11 +4,15 @@
 // passes; now and then a shooting star on a melody hit; the drop is the visual peak (the lines blaze, the outer layer
 // opens, the photograph brightens). Drawn in 2D at full size (crisp lines; the glow is a blurred copy), no 3D pass.
 // Each song has its own idea (presets below), all in that one style:
-// - girih-mehr: a warm desert just before sunrise; a 12-point sun rosette with rays that rises slowly over the song.
-// - girih-si-o-se-pol: Isfahan's bridge at night; its 33 arches as a ring arcade round an 11-fold star, mirrored and
-//   rippling in the river below.
-// - girih-jangal: the Hyrcanian forest at dusk; a 10-fold rosette of leaves that grows line by line, fireflies.
-// - girih-lenj: the Persian Gulf at night with a lenj; a 16-point star compass that sways like a boat.
+// - girih-mehr: a warm desert just before sunrise; a 12-point sun rosette with rays that rises slowly over the song; a
+//   caravan's five lanterns on the dunes flare one after another on the strong accents (where the «هِی!» lands).
+// - girih-si-o-se-pol: Isfahan's bridge at night; its 33 arches as a TWO-STOREY ring arcade (as the bridge) round an
+//   11-fold star, mirrored and rippling in the river below, all of it inside the 16:9 frame.
+// - girih-jangal: the Hyrcanian forest at dusk; a 10-fold rosette of leaves that grows line by line over a soft dark
+//   disc (the canopy gap behind it is bright), fireflies with their own green-gold glow.
+// - girih-lenj: the Persian Gulf at night with a lenj; a 16-point star compass that sways like a boat, mirrored faintly
+//   in the calm sea; the lenj's lantern flares on the kick.
+// The drop's light is a LOCAL bloom round the girih, never a full-frame wash (that greyed the whole picture).
 // Seamless: every motion turns by whole symmetry steps or whole cycles per period (the loop's length; 8 bars otherwise).
 import * as THREE from 'three';
 import { bandReader } from './geo.mjs';
@@ -47,19 +51,20 @@ function sunRosette(open = 0) {
 function arcade(open = 0) {
   // Si-o-se-pol: 33 pointed arches round a ring (the bridge's arcade), an 11-fold star {11/4} inside, two deck rings
   // an arcade: neighbouring arches share their pillars; each arch is pointed (two curves meeting at an angle)
+  // TWO storeys, as the real bridge: a lower storey of small deep arches on the river bed (inner ring), the deck, and
+  // the upper arcade above it (both 33 arches, so the 11-fold turn still closes the loop)
   const L = [], N = [], n = 33, w = TAU / n, d = w / 2;
-  const r0 = 0.66, r1 = 0.8, r2 = 0.9 + 0.03 * open;
-  L.push({ pts: circle(r0), o: r0, layer: 'core' }, { pts: circle(r2 + 0.04), o: 1.0, layer: 'outer' });
+  const rb = 0.56, rl1 = 0.6, rl2 = 0.68, r0 = 0.71, r1 = 0.79, r2 = 0.9 + 0.03 * open;
+  const pointed = (a, rA, rB, half) => { const p = []; for (let s = 0; s <= 8; s++) { const u = s / 8; p.push(pol(rA + (rB - rA) * Math.sqrt(u), a - half * Math.cos((Math.PI / 2) * u))); } for (let s = 7; s >= 0; s--) { const u = s / 8; p.push(pol(rA + (rB - rA) * Math.sqrt(u), a + half * Math.cos((Math.PI / 2) * u))); } return p; };
+  L.push({ pts: circle(rb), o: rb, layer: 'core' }, { pts: circle(r0), o: r0, layer: 'core' }, { pts: circle(r2 + 0.04), o: 1.0, layer: 'outer' });
   for (let i = 0; i < n; i++) {
     const a = -Math.PI / 2 + i * w;
-    const arch = [];
-    for (let s = 0; s <= 8; s++) { const u = s / 8; arch.push(pol(r1 + (r2 - r1) * Math.sqrt(u), a - d * Math.cos((Math.PI / 2) * u))); }
-    for (let s = 7; s >= 0; s--) { const u = s / 8; arch.push(pol(r1 + (r2 - r1) * Math.sqrt(u), a + d * Math.cos((Math.PI / 2) * u))); }
-    L.push({ pts: [pol(r0, a - d), ...arch], o: 0.8, layer: 'core' });
+    L.push({ pts: [pol(rb, a - d), ...pointed(a, rl1, rl2, d * 0.62)], o: 0.62, layer: 'core' });
+    L.push({ pts: [pol(r0, a - d), ...pointed(a, r1, r2, d)], o: 0.8, layer: 'core' });
     N.push({ p: pol(r2, a), o: r2, big: i % 3 === 0 ? 1 : 0.5 });
   }
-  L.push({ pts: star(11, 4, 0.5), o: 0.45, layer: 'core' }, { pts: circle(0.16 + 0.02 * open), o: 0.16, layer: 'outer' });
-  for (let i = 0; i < 11; i++) N.push({ p: pol(0.5, -Math.PI / 2 + (i * TAU) / 11), o: 0.52, big: 0.8 });
+  L.push({ pts: star(11, 4, 0.46), o: 0.42, layer: 'core' }, { pts: circle(0.15 + 0.02 * open), o: 0.15, layer: 'outer' });
+  for (let i = 0; i < 11; i++) N.push({ p: pol(0.46, -Math.PI / 2 + (i * TAU) / 11), o: 0.48, big: 0.8 });
   return { L, N };
 }
 
@@ -100,12 +105,19 @@ function compass(open = 0) {
   return { L, N };
 }
 
-// centre and radius are fractions of the frame: [x, y] of (W, H); r of min(W, H). `water` = the reflection's line.
+// centre and radius are fractions of the frame: [x, y] of (W, H); r of min(W, H). `water` = the reflection's line, IN THE PHOTOGRAPH
+// (a fraction of its height, measured on the photo), so the mirror rides with the photo's drift.
+// `mirror` = how much the reflection is squashed (and how far under the line it sits), `reflA` its strength.
+// `lanterns` / `lamp` are points IN THE PHOTOGRAPH (fractions of its width and height, measured on the photo), so they
+// ride with its slow drift: Mehr's caravan lanterns on the dunes, the lenj's own lantern.
+// `backing` = a soft dark disc behind the rosette (Jangal: the canopy gap behind it is bright, the thin lines went milky).
 export const PRESETS = {
-  'girih-mehr': { photo: 'mehr', geom: sunRosette, fold: 12, w: { c: [0.5, 0.42], r: 0.34 }, v: { c: [0.5, 0.33], r: 0.36 }, rise: 0.08, sun: true, shoot: true },
-  'girih-si-o-se-pol': { photo: 'si-o-se-pol', geom: arcade, fold: 11, w: { c: [0.5, 0.31], r: 0.25, water: 0.66 }, v: { c: [0.5, 0.27], r: 0.4, water: 0.6 }, shoot: true },
-  'girih-jangal': { photo: 'jangal', geom: leaves, fold: 10, w: { c: [0.5, 0.45], r: 0.38 }, v: { c: [0.5, 0.4], r: 0.42 }, grow: true, flies: 56, shoot: true },
-  'girih-lenj': { photo: 'lenj', geom: compass, fold: 16, w: { c: [0.5, 0.29], r: 0.25 }, v: { c: [0.5, 0.33], r: 0.35 }, sway: 0.06, shoot: true },
+  'girih-mehr': { photo: 'mehr', geom: sunRosette, fold: 12, w: { c: [0.5, 0.42], r: 0.34 }, v: { c: [0.5, 0.33], r: 0.36 }, rise: 0.08, sun: true, shoot: true,
+    lanterns: { w: [[0.16, 0.655], [0.195, 0.662], [0.23, 0.668], [0.265, 0.672], [0.3, 0.676]], v: [[0.1, 0.556], [0.15, 0.561], [0.2, 0.566], [0.25, 0.57], [0.3, 0.574]] } },
+  'girih-si-o-se-pol': { photo: 'si-o-se-pol', geom: arcade, fold: 11, w: { c: [0.5, 0.285], r: 0.262, water: 0.66, mirror: 0.46 }, v: { c: [0.5, 0.27], r: 0.4, water: 0.595 }, shoot: true },
+  'girih-jangal': { photo: 'jangal', geom: leaves, fold: 10, w: { c: [0.5, 0.45], r: 0.38 }, v: { c: [0.5, 0.4], r: 0.42 }, grow: true, flies: 56, shoot: true, backing: 0.62 },
+  'girih-lenj': { photo: 'lenj', geom: compass, fold: 16, w: { c: [0.5, 0.29], r: 0.2, water: 0.567, mirror: 0.46, reflA: 0.22 }, v: { c: [0.5, 0.31], r: 0.35, water: 0.598, mirror: 0.46, reflA: 0.22 }, sway: 0.06, shoot: true,
+    lamp: { w: [0.546, 0.566], v: [0.817, 0.583] } },
 };
 
 const loadImage = (src) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error(`no photograph ${src}`)); im.src = src; });
@@ -149,6 +161,12 @@ export async function build({ plan }) {
   const shots = [];
   for (const h of b.melOn ?? []) if (h.s >= 0.5 && (!shots.length || h.t - shots[shots.length - 1].t >= 3.5)) shots.push(h);
   if (loop && shots.length > 1 && shots[0].t + L - shots[shots.length - 1].t < 3.5) shots.pop();
+  // the accents (Mehr's caravan lanterns flare on them, where the group's «هِی!» lands): the strongest high hits, at
+  // least a bar apart; read round a loop
+  const accents = [];
+  for (const h of b.melOn ?? []) if (h.s >= 0.8 && (!accents.length || h.t - accents[accents.length - 1].t >= bar)) accents.push(h);
+  if (loop && accents.length > 1 && accents[0].t + L - accents[accents.length - 1].t < bar) accents.pop();
+  const accentAt = (t, delay = 0) => { let v = 0; for (const h of accents) for (const off of loop ? [0, -L, L] : [0]) { const a = t - (h.t + off) - delay; if (a >= 0 && a < 2.5) v = Math.max(v, Math.exp(-a / 0.5) * clamp(a / 0.04)); } return v; };
   // the energy of the music: a follower of the measured loudness (quick attack, slow release), read round a loop
   const rms = plan.rms ?? [];
   const frames = plan.frames;
@@ -185,6 +203,9 @@ export async function build({ plan }) {
 
   // the drawing surfaces: the glow is drawn at half size and laid on blurred; the reflection at half size
   const sprite = starSprite(96);
+  // a soft round halo (no flare): the fireflies' and the lanterns' glow, tinted per use
+  const haloSprite = (rgb) => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const rg = g.createRadialGradient(32, 32, 0, 32, 32, 32); rg.addColorStop(0, `rgba(${rgb},0.9)`); rg.addColorStop(0.25, `rgba(${rgb},0.35)`); rg.addColorStop(0.6, `rgba(${rgb},0.08)`); rg.addColorStop(1, `rgba(${rgb},0)`); g.fillStyle = rg; g.fillRect(0, 0, 64, 64); return c; };
+  const flyHalo = haloSprite('190,255,110'), warmHalo = haloSprite('255,170,70');
   const glow = document.createElement('canvas');
   glow.width = Math.round(plan.w / 2); glow.height = Math.round(plan.h / 2);
   const gctx = glow.getContext('2d');
@@ -253,14 +274,41 @@ export async function build({ plan }) {
     const pw = photo.width * cover * z, phh = photo.height * cover * z;
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
-    ctx.drawImage(photo, (W - pw) / 2 + ox * W, (H - phh) / 2 + oy * H, pw, phh);
+    const px0 = (W - pw) / 2 + ox * W, py0 = (H - phh) / 2 + oy * H;
+    const inPhoto = ([u, v]) => [px0 + u * pw, py0 + v * phh]; // a point measured on the photograph, as drawn now
+    ctx.drawImage(photo, px0, py0, pw, phh);
     const dim = 0.5 * (1 - (0.35 + 0.65 * st.bloom));
     if (dim > 0.005) { ctx.fillStyle = `rgba(2,3,12,${dim.toFixed(3)})`; ctx.fillRect(0, 0, W, H); }
     const { cx, cy, R } = place(W, H, t);
-    // the sun's glow behind the rosette (Mehr): it warms with the bloom and the kick
+    const k0 = W / 1920 * (H > W ? 1.25 : 1);
+    // lights that live IN the photograph: Mehr's caravan lanterns on the dunes (a low flicker, and a flare running down
+    // the line on each accent, where the «هِی!» lands); the lenj's lantern (it flares on the kick)
+    const lamps = [];
+    for (const [i, q] of ((P.lanterns ?? {})[vertical ? 'v' : 'w'] ?? []).entries()) {
+      const fl = 0.8 + 0.2 * Math.sin(TAU * ((3 + i) * p + rnd(i + 70)));
+      lamps.push([...inPhoto(q), 0.28 * fl + 0.9 * accentAt(t, 0.07 * i), 1]);
+    }
+    if (P.lamp) lamps.push([...inPhoto(P.lamp[vertical ? 'v' : 'w']), 0.3 + 0.75 * st.kick + 0.25 * st.flash, 1.3]);
+    if (lamps.length) {
+      ctx.globalCompositeOperation = 'lighter';
+      for (const [X, Y, a, big] of lamps) {
+        const s1 = (16 + 40 * clamp(a - 0.3)) * k0 * big;
+        ctx.globalAlpha = clamp(a); ctx.drawImage(warmHalo, X - s1 * 1.5, Y - s1 * 1.5, s1 * 3, s1 * 3);
+        ctx.globalAlpha = clamp(a * 0.9); ctx.drawImage(sprite, X - s1 / 2, Y - s1 / 2, s1, s1);
+      }
+      ctx.globalAlpha = 1;
+    }
+    // a soft dark disc behind the rosette where the photograph is bright behind it (Jangal's canopy gap)
+    if (P.backing) {
+      const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.25);
+      bg.addColorStop(0, `rgba(3,8,7,${P.backing.toFixed(2)})`); bg.addColorStop(0.6, `rgba(3,8,7,${(P.backing * 0.75).toFixed(2)})`); bg.addColorStop(1, 'rgba(3,8,7,0)');
+      ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    }
+    // the sun's glow behind the rosette (Mehr): it warms with the bloom and the kick (kept low: the photograph's own
+    // sunrise is already bright there, more washed the heart out)
     if (P.sun) {
       const sg = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.6);
-      const a = 0.05 + 0.14 * st.bloom + 0.06 * st.kick;
+      const a = 0.03 + 0.08 * st.bloom + 0.04 * st.kick;
       sg.addColorStop(0, `rgba(255,190,110,${a.toFixed(3)})`); sg.addColorStop(0.45, `rgba(255,140,70,${(a * 0.35).toFixed(3)})`); sg.addColorStop(1, 'rgba(255,120,60,0)');
       ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
     }
@@ -326,19 +374,21 @@ export async function build({ plan }) {
       ctx.drawImage(sprite, X - size / 2, Y - size / 2, size, size);
     }
     ctx.globalAlpha = 1;
-    // 4. the reflection (Si-o-se-pol): the girih mirrored under the river's line, squashed and rippling
+    // 4. the reflection (Si-o-se-pol's river, Lenj's calm sea): the girih mirrored under the water's line (measured on
+    // the photograph, so it rides with it), squashed by `mirror` and as far under the line as the girih is over it
+    // times `mirror` (so the whole mirror stays in the frame), rippling
     if (F.water) {
-      const wy = F.water * H;
+      const wy = py0 + F.water * phh, m = F.mirror ?? 0.55;
       rctx.setTransform(1, 0, 0, 1, 0, 0);
       rctx.clearRect(0, 0, refl.width, refl.height);
       rctx.globalCompositeOperation = 'lighter';
-      const ry = (wy + (wy - cy) * 0.55) / 2; // the mirror of the centre under the river's line, squashed
-      strokeGeom(rctx, geom, { cx: cx / 2, cy: ry, R: R / 2, rot: -rot, sc, sy: -0.55, alpha: lineA, width: 1.6 * k, colour: 'rgb(255,190,110)', grow: st.grow });
-      for (const [X, Y, b2] of nodes) { const yy = ry - (Y / 2 - cy / 2) * 0.55; rctx.globalAlpha = clamp(b2 * 0.7); rctx.drawImage(sprite, X / 2 - 8 * k, yy - 8 * k, 16 * k, 16 * k); }
+      const ry = (wy + (wy - cy) * m) / 2; // the mirror of the centre under the water's line, squashed
+      strokeGeom(rctx, geom, { cx: cx / 2, cy: ry, R: R / 2, rot: -rot, sc, sy: -m, alpha: lineA, width: 1.6 * k, colour: 'rgb(255,190,110)', grow: st.grow });
+      for (const [X, Y, b2] of nodes) { const yy = ry - (Y / 2 - cy / 2) * m; rctx.globalAlpha = clamp(b2 * 0.7); rctx.drawImage(sprite, X / 2 - 8 * k, yy - 8 * k, 16 * k, 16 * k); }
       rctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'lighter';
       r2ctx.clearRect(0, 0, refl2.width, refl2.height); r2ctx.filter = `blur(${(0.8 * k).toFixed(1)}px)`; r2ctx.drawImage(refl, 0, 0); r2ctx.filter = 'none';
-      ctx.globalAlpha = 0.42;
+      ctx.globalAlpha = F.reflA ?? 0.42;
       const sh = 6;
       for (let y = Math.floor(wy / 2); y < refl.height; y += sh) {
         const off = 3 * k * Math.sin(y * 0.18 + TAU * 4 * p) * (0.5 + (y - wy / 2) / refl.height);
@@ -364,6 +414,8 @@ export async function build({ plan }) {
       const fl = 0.5 + 0.5 * Math.sin(TAU * (f.fl * p + f.ph));
       const a = clamp(0.3 + 0.7 * fl * (0.5 + 0.5 * st.energy) + 0.5 * st.kick * (i % 2));
       const size = (26 + 22 * fl) * k;
+      ctx.globalAlpha = a * 0.55; // the firefly's own soft green-gold glow round its spark
+      ctx.drawImage(flyHalo, x - size * 1.1, y - size * 1.1, size * 2.2, size * 2.2);
       ctx.globalAlpha = a;
       ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size);
     }
@@ -390,9 +442,15 @@ export async function build({ plan }) {
         ctx.globalAlpha = 1;
       }
     }
-    // 8. the beat in the light: a faint warm wash on each kick, a stronger one as a drop lands
-    const wash = 0.05 * st.kick + 0.05 * ringA + 0.22 * st.flash;
-    if (wash > 0.004) { ctx.fillStyle = `rgba(255,200,140,${clamp(wash).toFixed(3)})`; ctx.fillRect(0, 0, W, H); }
+    // 8. the beat in the light: a LOCAL bloom round the girih (never a full-frame wash: that greyed the whole picture as
+    // a drop landed): faint on each kick, stronger as a drop lands; brightest on the girih's body, not on its heart
+    // (Mehr's heart sits on the sunrise and would burn out)
+    const wash = 0.05 * st.kick + 0.05 * ringA + 0.2 * st.flash;
+    if (wash > 0.004) {
+      const wg = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * sc * 1.45);
+      wg.addColorStop(0, `rgba(255,200,140,${clamp(wash * 0.3).toFixed(3)})`); wg.addColorStop(0.55, `rgba(255,200,140,${clamp(wash).toFixed(3)})`); wg.addColorStop(1, 'rgba(255,200,140,0)');
+      ctx.fillStyle = wg; ctx.fillRect(0, 0, W, H);
+    }
     ctx.globalCompositeOperation = 'source-over';
     // a soft vignette keeps the eye on the girih and the words readable
     const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
