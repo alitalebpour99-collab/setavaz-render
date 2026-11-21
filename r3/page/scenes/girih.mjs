@@ -29,22 +29,16 @@ const circle = (r, n = 96) => { const pts = []; for (let i = 0; i <= n; i++) pts
 function sunRosette(open = 0) {
   // Mehr: a 12-point star {12/5}, twelve pointed petals round it, a ring, and 24 sun rays outside
   const L = [], N = [], w = TAU / 12;
-  L.push({ pts: star(12, 5, 0.56), o: 0.4, layer: 'core' });
-  L.push({ pts: circle(0.3), o: 0.3, layer: 'core' });
+  L.push({ pts: star(12, 5, 0.34), o: 0.3, layer: 'core' });
   for (let i = 0; i < 12; i++) {
     const a = -Math.PI / 2 + i * w;
-    const sp = 0.5 + 0.12 * open;
-    const p = [pol(0.3, a - w * sp), pol(0.74, a - w * 0.36), pol(1.0 + 0.04 * open, a), pol(0.74, a + w * 0.36), pol(0.3, a + w * sp)];
+    const p = [pol(0.34, a - w / 2), pol(0.7, a - w * (0.3 + 0.04 * open)), pol(0.96 + 0.04 * open, a), pol(0.7, a + w * (0.3 + 0.04 * open)), pol(0.34, a + w / 2)];
     L.push({ pts: p, o: 0.7, layer: 'core' });
-    N.push({ p: pol(1.0 + 0.04 * open, a), o: 1.0, big: 1 }, { p: pol(0.74, a - w * 0.36), o: 0.74, big: 0.5 });
-    N.push({ p: pol(0.56, a), o: 0.56, big: 0.6 });
+    N.push({ p: pol(0.96 + 0.04 * open, a), o: 1.0, big: 1 }, { p: pol(0.7, a - w * (0.3 + 0.04 * open)), o: 0.7, big: 0.45 });
+    N.push({ p: pol(0.34, a), o: 0.34, big: 0.5 });
+    const ra = a + w / 2;
+    L.push({ pts: [pol(1.06, ra), pol(1.06 + 0.16 * (0.6 + 0.8 * open), ra)], o: 1.1, layer: 'rays' });
   }
-  for (let i = 0; i < 24; i++) {
-    const a = -Math.PI / 2 + (i + 0.5) * (TAU / 24);
-    const len = i % 2 ? 0.16 : 0.3;
-    L.push({ pts: [pol(1.1, a), pol(1.1 + len * (0.7 + 0.6 * open), a)], o: 1.15, layer: 'rays' });
-  }
-  L.push({ pts: circle(1.08), o: 1.08, layer: 'outer' });
   return { L, N };
 }
 
@@ -105,10 +99,10 @@ function compass(open = 0) {
 
 // centre and radius are fractions of the frame: [x, y] of (W, H); r of min(W, H). `water` = the reflection's line.
 export const PRESETS = {
-  'girih-mehr': { photo: 'mehr', geom: sunRosette, fold: 12, w: { c: [0.5, 0.44], r: 0.33 }, v: { c: [0.5, 0.36], r: 0.4 }, rise: 0.08, sun: true, shoot: true },
+  'girih-mehr': { photo: 'mehr', geom: sunRosette, fold: 12, w: { c: [0.5, 0.42], r: 0.3 }, v: { c: [0.5, 0.33], r: 0.36 }, rise: 0.08, sun: true, shoot: true },
   'girih-si-o-se-pol': { photo: 'si-o-se-pol', geom: arcade, fold: 33, w: { c: [0.5, 0.31], r: 0.25, water: 0.66 }, v: { c: [0.5, 0.27], r: 0.4, water: 0.6 }, shoot: true },
-  'girih-jangal': { photo: 'jangal', geom: leaves, fold: 10, w: { c: [0.5, 0.45], r: 0.38 }, v: { c: [0.5, 0.42], r: 0.42 }, grow: true, flies: 56, shoot: true },
-  'girih-lenj': { photo: 'lenj', geom: compass, fold: 16, w: { c: [0.5, 0.4], r: 0.34 }, v: { c: [0.5, 0.38], r: 0.4 }, sway: 0.06, shoot: true },
+  'girih-jangal': { photo: 'jangal', geom: leaves, fold: 10, w: { c: [0.5, 0.45], r: 0.38 }, v: { c: [0.5, 0.4], r: 0.42 }, grow: true, flies: 56, shoot: true },
+  'girih-lenj': { photo: 'lenj', geom: compass, fold: 16, w: { c: [0.5, 0.29], r: 0.25 }, v: { c: [0.5, 0.34], r: 0.4 }, sway: 0.06, shoot: true },
 };
 
 const loadImage = (src) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error(`no photograph ${src}`)); im.src = src; });
@@ -194,6 +188,9 @@ export async function build({ plan }) {
   const refl = document.createElement('canvas');
   refl.width = Math.round(plan.w / 2); refl.height = Math.round(plan.h / 2);
   const rctx = refl.getContext('2d');
+  // blurred copies are made at half size (four times cheaper than blurring the full frame)
+  const half = () => { const c = document.createElement('canvas'); c.width = glow.width; c.height = glow.height; return [c, c.getContext('2d')]; };
+  const [blurA, bctxA] = half(), [blurB, bctxB] = half(), [refl2, r2ctx] = half();
 
   // the frame check's hero: a tiny mark at the centre of a (blank) 3D scene, as the geometry worlds do
   const scene = new THREE.Scene();
@@ -260,7 +257,7 @@ export async function build({ plan }) {
     // the sun's glow behind the rosette (Mehr): it warms with the bloom and the kick
     if (P.sun) {
       const sg = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.6);
-      const a = 0.1 + 0.28 * st.bloom + 0.1 * st.kick;
+      const a = 0.05 + 0.14 * st.bloom + 0.06 * st.kick;
       sg.addColorStop(0, `rgba(255,190,110,${a.toFixed(3)})`); sg.addColorStop(0.45, `rgba(255,140,70,${(a * 0.35).toFixed(3)})`); sg.addColorStop(1, 'rgba(255,120,60,0)');
       ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
     }
@@ -269,13 +266,13 @@ export async function build({ plan }) {
     let rot = (TAU / P.fold) * p;
     if (P.sway) rot = 0.4 * (TAU / P.fold) * p + P.sway * Math.sin(TAU * Math.round(period / (2 * bar)) * p);
     const sc = (0.94 + 0.07 * st.bloom + 0.03 * st.flash) * (1 + 0.018 * st.bass);
-    const lineA = clamp(0.5 + 0.4 * st.bloom + 0.2 * st.mel + 0.3 * st.flash);
+    const lineA = clamp(0.45 + 0.35 * st.bloom + 0.15 * st.mel + 0.25 * st.flash);
     const k = W / 1920 * (H > W ? 1.25 : 1);
     // the glow layer: thick, half size, then laid on blurred (twice: a tight and a wide halo)
     gctx.setTransform(1, 0, 0, 1, 0, 0);
     gctx.clearRect(0, 0, glow.width, glow.height);
     gctx.globalCompositeOperation = 'lighter';
-    strokeGeom(gctx, geom, { cx: cx / 2, cy: cy / 2, R: R / 2, rot, sc, alpha: 0.55 * lineA * (0.7 + 0.6 * st.bloom), width: 2.4 * k, colour: 'rgb(255,176,80)', grow: st.grow });
+    strokeGeom(gctx, geom, { cx: cx / 2, cy: cy / 2, R: R / 2, rot, sc, alpha: 0.32 * lineA * (0.7 + 0.5 * st.bloom), width: 2.0 * k, colour: 'rgb(255,176,80)', grow: st.grow });
     // the kick's ring: runs out from the heart to past the rim in 0.7 s
     const age = st.kh.age;
     const ringA = age < 0.75 ? Math.pow(1 - age / 0.75, 1.6) * clamp(0.45 + st.kh.s) : 0;
@@ -287,20 +284,18 @@ export async function build({ plan }) {
       gctx.beginPath(); gctx.arc(cx / 2, cy / 2, ringR / 2, 0, TAU); gctx.stroke();
       gctx.globalAlpha = 1;
     }
+    for (const [c2, x2, r] of [[blurA, bctxA, 7], [blurB, bctxB, 2]]) { x2.clearRect(0, 0, c2.width, c2.height); x2.filter = `blur(${(r * k).toFixed(1)}px)`; x2.drawImage(glow, 0, 0); x2.filter = 'none'; }
     ctx.globalCompositeOperation = 'lighter';
-    ctx.filter = `blur(${(14 * k).toFixed(1)}px)`;
-    ctx.globalAlpha = 0.9;
-    ctx.drawImage(glow, 0, 0, W, H);
-    ctx.filter = `blur(${(4 * k).toFixed(1)}px)`;
-    ctx.globalAlpha = 0.8;
-    ctx.drawImage(glow, 0, 0, W, H);
-    ctx.filter = 'none';
+    ctx.globalAlpha = 0.75;
+    ctx.drawImage(blurA, 0, 0, W, H);
+    ctx.globalAlpha = 0.5;
+    ctx.drawImage(blurB, 0, 0, W, H);
     ctx.globalAlpha = 1;
     // the crisp lines
     ctx.globalCompositeOperation = 'source-over';
     strokeGeom(ctx, geom, { cx, cy, R, rot, sc, alpha: lineA, width: 1.7 * k, colour: 'rgb(246,206,128)', grow: st.grow });
     ctx.globalCompositeOperation = 'lighter';
-    strokeGeom(ctx, geom, { cx, cy, R, rot, sc, alpha: 0.35 * lineA * (0.5 + st.bloom), width: 0.8 * k, colour: 'rgb(255,240,205)', grow: st.grow, vein: 0 });
+    strokeGeom(ctx, geom, { cx, cy, R, rot, sc, alpha: 0.18 * lineA * (0.5 + st.bloom), width: 0.7 * k, colour: 'rgb(255,240,205)', grow: st.grow, vein: 0 });
     if (ringA > 0.01) {
       ctx.globalAlpha = ringA * 0.9;
       ctx.strokeStyle = 'rgb(255,236,196)';
@@ -318,11 +313,11 @@ export async function build({ plan }) {
       const X = cx + (x * c - y * s) * R * sc, Y = cy + (x * s + y * c) * R * sc;
       const pass = ringA > 0 ? Math.exp(-Math.pow((Math.hypot(X - cx, Y - cy) - ringR) / (0.09 * R), 2)) * ringA : 0;
       const tw = 0.75 + 0.25 * Math.sin(TAU * (3 * p + rnd(i)));
-      const b2 = (0.35 + 0.45 * st.bloom) * n.big * tw + 1.6 * pass + 0.5 * st.hat * (i % 3 === 0 ? 1 : 0) + 0.6 * st.flash * n.big;
+      const b2 = (0.55 + 0.45 * st.bloom) * n.big * tw + 1.6 * pass + 0.5 * st.hat * (i % 3 === 0 ? 1 : 0) + 0.6 * st.flash * n.big;
       nodes.push([X, Y, b2]);
     }
     for (const [X, Y, b2] of nodes) {
-      const size = (26 + 30 * clamp(b2 - 0.6)) * k * (H > W ? 1.1 : 1);
+      const size = (34 + 34 * clamp(b2 - 0.6)) * k * (H > W ? 1.1 : 1);
       ctx.globalAlpha = clamp(b2);
       ctx.drawImage(sprite, X - size / 2, Y - size / 2, size, size);
     }
@@ -338,14 +333,13 @@ export async function build({ plan }) {
       for (const [X, Y, b2] of nodes) { const yy = ry - (Y / 2 - cy / 2) * 0.55; rctx.globalAlpha = clamp(b2 * 0.7); rctx.drawImage(sprite, X / 2 - 8 * k, yy - 8 * k, 16 * k, 16 * k); }
       rctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'lighter';
+      r2ctx.clearRect(0, 0, refl2.width, refl2.height); r2ctx.filter = `blur(${(0.8 * k).toFixed(1)}px)`; r2ctx.drawImage(refl, 0, 0); r2ctx.filter = 'none';
       ctx.globalAlpha = 0.42;
-      ctx.filter = `blur(${(1.2 * k).toFixed(1)}px)`;
       const sh = 6;
       for (let y = Math.floor(wy / 2); y < refl.height; y += sh) {
         const off = 3 * k * Math.sin(y * 0.18 + TAU * 4 * p) * (0.5 + (y - wy / 2) / refl.height);
-        ctx.drawImage(refl, 0, y, refl.width, sh, off, y * 2, W, sh * 2);
+        ctx.drawImage(refl2, 0, y, refl.width, sh, off, y * 2, W, sh * 2);
       }
-      ctx.filter = 'none';
       ctx.globalAlpha = 1;
     }
     // 5. the sky's small stars twinkle with the hats (above the horizon only)
