@@ -1,0 +1,61 @@
+name: setareh-v2
+on:
+  push:
+    branches: [setareh-v2-1123]
+jobs:
+  part:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {fmt: reel, a: 0, b: 450}
+          - {fmt: f16, a: 0, b: 654}
+          - {fmt: f16, a: 654, b: 1308}
+          - {fmt: f16, a: 1308, b: 1962}
+          - {fmt: f16, a: 1962, b: 2616}
+          - {fmt: f16, a: 2616, b: 3270}
+          - {fmt: f16, a: 3270, b: 3924}
+          - {fmt: f16, a: 3924, b: 4578}
+          - {fmt: f16, a: 4578, b: 5228}
+          - {fmt: f9, a: 0, b: 654}
+          - {fmt: f9, a: 654, b: 1308}
+          - {fmt: f9, a: 1308, b: 1962}
+          - {fmt: f9, a: 1962, b: 2616}
+          - {fmt: f9, a: 2616, b: 3270}
+          - {fmt: f9, a: 3270, b: 3924}
+          - {fmt: f9, a: 3924, b: 4578}
+          - {fmt: f9, a: 4578, b: 5228}
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+      - run: pip install -q pillow numpy
+      - run: mkdir -p out && python tools/render.py ${{ matrix.fmt }} ${{ matrix.a }} ${{ matrix.b }} out/${{ matrix.fmt }}-${{ matrix.a }}.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.fmt }}-${{ matrix.a }}
+          path: out/
+          retention-days: 2
+  finish:
+    needs: part
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+      - run: pip install -q pillow numpy
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: part-*
+          merge-multiple: true
+          path: parts
+      - run: python tools/finish.py parts final
+      - uses: actions/upload-artifact@v4
+        with: {name: final-reel, path: final/reel/, retention-days: 7, compression-level: 0}
+      - uses: actions/upload-artifact@v4
+        with: {name: final-f16, path: final/f16/, retention-days: 7, compression-level: 0}
+      - uses: actions/upload-artifact@v4
+        with: {name: final-f9, path: final/f9/, retention-days: 7, compression-level: 0}
+      - uses: actions/upload-artifact@v4
+        with: {name: sheets, path: final/sheets/, retention-days: 7}
