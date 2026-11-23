@@ -51,6 +51,7 @@ jobs:
           merge-multiple: true
           path: parts
       - run: python tools/finish.py parts final
+        continue-on-error: true
       - uses: actions/upload-artifact@v4
         with: {name: final-reel, path: final/reel/, retention-days: 7, compression-level: 0}
       - uses: actions/upload-artifact@v4

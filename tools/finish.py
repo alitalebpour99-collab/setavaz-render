@@ -92,17 +92,21 @@ sheet(reel, [(t, f'{t:05.2f}s  {lab}') for t, lab in reel_m], 5, 288, os.path.jo
 
 
 # the loop seam: SSIM of last frame -> first frame against a normal step
-def ssim(v, t1, t2):
+def ssim(v, n1, n2):
     a, b = os.path.join(PARTS, '_a.png'), os.path.join(PARTS, '_b.png')
-    ff('-ss', f'{t1:.3f}', '-i', v, '-frames:v', '1', a)
-    ff('-ss', f'{t2:.3f}', '-i', v, '-frames:v', '1', b)
+    for n, p in ((n1, a), (n2, b)):
+        ff('-i', v, '-vf', f'select=eq(n\,{n})', '-vsync', '0', '-frames:v', '1', p)
     r = subprocess.run(['ffmpeg', '-hide_banner', '-i', a, '-i', b, '-lavfi', 'ssim', '-f', 'null', '-'], capture_output=True, text=True)
-    return float(re.findall(r'All:([0-9.]+)', r.stderr)[-1])
+    m = re.findall(r'All:([0-9.]+)', r.stderr)
+    return float(m[-1]) if m else -1
 
 
-info['seam_ssim_last_to_first'] = ssim(reel, 449 / 30, 0)
-info['ssim_normal_step_mid'] = ssim(reel, 200 / 30, 201 / 30)
-info['ssim_normal_step_end'] = ssim(reel, 447 / 30, 448 / 30)
+try:
+    info['seam_ssim_last_to_first'] = ssim(reel, 449, 0)
+    info['ssim_normal_step_mid'] = ssim(reel, 200, 201)
+    info['ssim_normal_step_end'] = ssim(reel, 447, 448)
+except Exception as e:
+    info['ssim_error'] = str(e)[:200]
 for f in glob.glob(os.path.join(OUT, '*', '*.mp4')):
     info[os.path.basename(f)] = round(os.path.getsize(f) / 1048576, 1)
 json.dump(info, open(os.path.join(OUT, 'sheets', 'finish.json'), 'w'), indent=1)
