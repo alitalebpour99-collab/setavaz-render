@@ -101,7 +101,7 @@ LINES = [
     dict(b0=3, b1=5, fa='ستاره‌ای هست که نام ندارد', en='There is a star that has no name'),
     dict(b0=6, b1=9, fa='جایش روی نقشه خالی است', en='Its place on the map is empty'),
     dict(b0=10, b1=10, fa='گوش کن', en='Listen', step=1),
-    dict(b0=11, b1=13, fa='یک اسطرلاب کهنه، یک گره', en='An old astrolabe, a knot'),
+    dict(b0=11, b1=13, fa='یک اسطرلاب کهنه و یک گره', en='An old astrolabe and a knot'),
     dict(b0=14, b1=17, fa='گرهی با چهار گوشه', en='A knot with four corners'),
     dict(b0=18, b1=19, fa='هر گوشه، یک سرزمین', en='Each corner is a land'),
     dict(b0=20, b1=22, fa='کویر پل جنگل دریا', en='Desert, bridge, forest, sea', step=2),
@@ -121,7 +121,7 @@ LINES = [
     dict(b0=66, b1=68, fa='نامش یک آواز است', en='Its name is a song', kind='big'),
     dict(b0=70, b1=73, fa='حالا راه را بلد است', en='Now it knows the way', kind='big'),
     dict(b0=74, b1=76, fa='به سوی کویر', en='toward the desert', kind='big', land=0),
-    dict(b0=77, b1=80, fa='و این، تازه آغاز است', en='and this is only the beginning'),
+    dict(b0=77, b1=80, fa='و این تازه آغاز است', en='and this is only the beginning'),
 ]
 LANDS = [('کویر', 'DESERT'), ('پل', 'BRIDGE'), ('جنگل', 'FOREST'), ('دریا', 'SEA')]
 LAND_PETAL = [2, 14, 10, 6]          # top-right, top-left, bottom-left, bottom-right: the journey runs right to left
